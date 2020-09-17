@@ -48,8 +48,8 @@ def get_project_file_name(folder) -> str:
 
 
 class Book:
-    template = 'asset/template.html'
-    index_page = 'html/index.html'
+    template = 'asset/template'
+    index = 'asset/index'
     css = 'html/style.css'
     sass_style = 'asset/style.scss'
     chapters = [
@@ -65,7 +65,7 @@ class Book:
 
     def load(self, data):
         self.template = data['template']
-        self.index_page = data['index_page']
+        self.index = data['index']
         self.css = data['css']
         self.sass_style = data['sass_style']
         chapters = data['chapters']
@@ -80,7 +80,7 @@ class Book:
     def save(self):
         data = {}
         data['template'] = self.template
-        data['index_page'] = self.index_page
+        data['index'] = self.index
         data['css'] = self.css
         data['sass_style'] = self.sass_style
         chapters = []
@@ -128,8 +128,8 @@ def pretty(text):
     return text
 
 
-def is_up_to_date(path, output, book: Book, basename) -> bool:
-    sourcemod = max(os.path.getmtime(path), os.path.getmtime(book.template))
+def is_up_to_date(path, output, book: Book, basename, extension: str) -> bool:
+    sourcemod = max(os.path.getmtime(path), os.path.getmtime(book.template + extension))
 
     # todo(Gustav): keep or extend?
     if os.path.exists(cpp_path(basename)):
@@ -247,12 +247,25 @@ def generate_output(parsed_markdown: ParsedMarkdown, template: str, book: Book, 
     return output
 
 
+def format_index(book: Book, extension: str):
+    template = ''
+    with open(book.index + extension) as f:
+        template = f.read()
+    
+    name = os.path.splitext(os.path.basename(book.index+extension))[0]
+    output_file = output_path(extension, name)
+
+    with open(output_file, 'w') as out:
+        output = template
+        out.write(output)
+
+
 def format_file(chapter: Chapter, skip_up_to_date: bool, extension: str, stat: Stat, book: Book):
     path = os.path.join('book', chapter.href) # book/the_file.md
     basename = os.path.splitext(chapter.href)[0] # the_file
     output_file = output_path(extension, basename)
 
-    if skip_up_to_date and is_up_to_date(path, output_file, book, basename):
+    if skip_up_to_date and is_up_to_date(path, output_file, book, basename, extension):
         # See if the HTML is up to date
         return
         
@@ -261,7 +274,7 @@ def format_file(chapter: Chapter, skip_up_to_date: bool, extension: str, stat: S
     modified = datetime.datetime.fromtimestamp(os.path.getmtime(path))
     mod_str = modified.strftime('%B %d, %Y')
 
-    with open("asset/template." + extension) as f:
+    with open(book.template + extension) as f:
         template = f.read()
 
     # Write the output.
@@ -458,6 +471,7 @@ def include_code(pattern, index, indentation):
 
 def format_files(file_filter: typing.Optional[str], skip_up_to_date: bool, book: Book, extension: str, stat: Stat):
     '''Process each markdown file.'''
+    format_index(book, extension)
     for chapter in book.chapters:
         if file_filter is None or file_filter in chapter.href:
             format_file(chapter, skip_up_to_date, extension, stat, book)
