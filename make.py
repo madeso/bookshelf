@@ -247,7 +247,7 @@ def generate_output(parsed_markdown: ParsedMarkdown, template: str, book: Book, 
     return output
 
 
-def format_file(chapter: Chapter, nav, skip_up_to_date: bool, extension: str, stat: Stat, book: Book):
+def format_file(chapter: Chapter, skip_up_to_date: bool, extension: str, stat: Stat, book: Book):
     path = os.path.join('book', chapter.href) # book/the_file.md
     basename = os.path.splitext(chapter.href)[0] # the_file
     output_file = output_path(extension, basename)
@@ -456,34 +456,11 @@ def include_code(pattern, index, indentation):
     return code
 
 
-def buildnav(book: Book):
-    nav = '<div class="nav">\n'
-    nav = nav + '<h1><a href="/">Navigation</a></h1>\n'
-
-    # Read the chapter outline from the index page.
-    with open(book.index_page, 'r') as source:
-        innav = False
-
-        for line in source:
-            if innav:
-                nav = nav + line
-                if line.startswith('</ul'):
-                    break
-            else:
-                if line.startswith('<ul>'):
-                    nav = nav + line
-                    innav = True
-
-    nav = nav + '</div>'
-
-    return nav
-
-
-def format_files(file_filter: typing.Optional[str], skip_up_to_date: bool, book: Book, nav: str, extension: str, stat: Stat):
+def format_files(file_filter: typing.Optional[str], skip_up_to_date: bool, book: Book, extension: str, stat: Stat):
     '''Process each markdown file.'''
     for chapter in book.chapters:
         if file_filter is None or file_filter in chapter.href:
-            format_file(chapter, nav, skip_up_to_date, extension, stat, book)
+            format_file(chapter, skip_up_to_date, extension, stat, book)
 
 
 def check_sass(book: Book):
@@ -499,10 +476,9 @@ def check_sass(book: Book):
 def handle_watch(args):
     extension = "html"
     book = get_book(args.folder)
-    nav = buildnav(book)
     while True:
         stat = Stat()
-        format_files(None, True, book, nav, extension, stat)
+        format_files(None, True, book, extension, stat)
         check_sass(book)
         time.sleep(0.3)
 
@@ -510,7 +486,6 @@ def handle_watch(args):
 def handle_build(args):
     extension = "html"
     book = get_book(args.folder)
-    nav = buildnav(book)
 
     if args.xml:
         extension = "xml"
@@ -519,7 +494,7 @@ def handle_build(args):
     file_filter = args.filter
     stat = Stat()
 
-    format_files(file_filter, False, book, nav, extension, stat)
+    format_files(file_filter, False, book, extension, stat)
 
     valid_chapters = stat.num_chapters - stat.empty_chapters
     average_word_count = stat.total_words / valid_chapters if valid_chapters > 0 else 0
