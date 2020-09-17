@@ -1,3 +1,7 @@
 .vscode/
 .book.json
 html/
+
+# temporary
+asset/
+book/
