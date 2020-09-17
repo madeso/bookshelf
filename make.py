@@ -39,6 +39,10 @@ class Stat:
 
 
 class Book:
+    template = 'asset/template.html'
+    index_page = 'html/index.html'
+    css = 'html/style.css'
+    sass_style = 'asset/style.scss'
     searchpath = ('book/*.markdown')
     chapters = [
         Chapter("Acknowledgements", "acknowledgements.html"),
@@ -106,7 +110,7 @@ def format_file(path, nav, skip_up_to_date, extension, stat: Stat, book: Book):
 
     # See if the HTML is up to date.
     sourcemod = os.path.getmtime(path)
-    sourcemod = max(sourcemod, os.path.getmtime('asset/template.html'))
+    sourcemod = max(sourcemod, os.path.getmtime(book.template))
     if os.path.exists(cpp_path(basename)):
         sourcemod = max(sourcemod, os.path.getmtime(cpp_path(basename)))
 
@@ -126,9 +130,9 @@ def format_file(path, nav, skip_up_to_date, extension, stat: Stat, book: Book):
 
     # Read the markdown file and preprocess it.
     contents = ''
-    with open(path, 'r') as input:
+    with open(path, 'r') as input_file:
         # Read each line, preprocessing the special codes.
-        for line in input:
+        for line in input_file:
             stripped = line.lstrip()
             indentation = line[:len(line) - len(stripped)]
 
@@ -208,10 +212,6 @@ def format_file(path, nav, skip_up_to_date, extension, stat: Stat, book: Book):
             output = clean_up_xml(output, book)
 
         out.write(output)
-
-    # global total_words
-    # global num_chapters
-    # global empty_chapters
 
     word_count = len(contents.split(None))
     if section:
@@ -419,7 +419,7 @@ def buildnav(book: Book):
     nav = nav + '<h1><a href="/">Navigation</a></h1>\n'
 
     # Read the chapter outline from the index page.
-    with open('html/index.html', 'r') as source:
+    with open(book.index_page, 'r') as source:
         innav = False
 
         for line in source:
@@ -444,13 +444,13 @@ def format_files(file_filter: typing.Optional[str], skip_up_to_date: bool, book:
             format_file(f, nav, skip_up_to_date, extension, stat, book)
 
 
-def check_sass():
-    sourcemod = os.path.getmtime('asset/style.scss')
-    destmod = os.path.getmtime('html/style.css')
+def check_sass(book: Book):
+    sourcemod = os.path.getmtime(book.sass_style)
+    destmod = os.path.getmtime(book.css)
     if sourcemod < destmod:
         return
 
-    subprocess.call(['sass', 'asset/style.scss', 'html/style.css'])
+    subprocess.call(['sass', book.sass_style, book.css])
     print("{}✓{} style.css".format(GREEN, DEFAULT))
 
 
@@ -467,7 +467,7 @@ def handle_watch(args):
     while True:
         stat = Stat()
         format_files(None, True, book, nav, extension, stat)
-        check_sass()
+        check_sass(book)
         time.sleep(0.3)
 
 
