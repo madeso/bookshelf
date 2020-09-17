@@ -8,7 +8,7 @@ import subprocess
 import typing
 import argparse
 import time
-from datetime import datetime
+import datetime
 
 import markdown
 # import smartypants
@@ -170,7 +170,7 @@ def format_file(path, nav, skip_up_to_date, extension, stat: Stat, book: Book):
             else:
                 contents += pretty(line)
 
-    modified = datetime.fromtimestamp(os.path.getmtime(path))
+    modified = datetime.datetime.fromtimestamp(os.path.getmtime(path))
     mod_str = modified.strftime('%B %d, %Y')
 
     with open("asset/template." + extension) as f:
