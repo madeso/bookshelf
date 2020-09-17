@@ -43,40 +43,10 @@ class Book:
     index_page = 'html/index.html'
     css = 'html/style.css'
     sass_style = 'asset/style.scss'
-    searchpath = ('book/*.markdown')
+    searchpath = 'book/*.md'
     chapters = [
-        Chapter("Acknowledgements", "acknowledgements.html"),
-        Chapter("Introduction", "introduction.html"),
-        Chapter("Architecture, Performance, and Games", "architecture-performance-and-games.html"),
-        
-        Chapter("Design Patterns Revisited"),
-        Chapter("Command", "command.html"),
-        Chapter("Flyweight", "flyweight.html"),
-        Chapter("Observer", "observer.html"),
-        Chapter("Prototype", "prototype.html"),
-        Chapter("Singleton", "singleton.html"),
-        Chapter("State", "state.html"),
-        
-        Chapter("Sequencing Patterns"),
-        Chapter("Double Buffer", "double-buffer.html"),
-        Chapter("Game Loop", "game-loop.html"),
-        Chapter("Update Method", "update-method.html"),
-        
-        Chapter("Behavioral Patterns"),
-        Chapter("Bytecode", "bytecode.html"),
-        Chapter("Subclass Sandbox", "subclass-sandbox.html"),
-        Chapter("Type Object", "type-object.html"),
-        
-        Chapter("Decoupling Patterns"),
-        Chapter("Component", "component.html"),
-        Chapter("Event Queue", "event-queue.html"),
-        Chapter("Service Locator", "service-locator.html"),
-
-        Chapter("Optimization Patterns"),
-        Chapter("Data Locality", "data-locality.html"),
-        Chapter("Dirty Flag", "dirty-flag.html"),
-        Chapter("Object Pool", "object-pool.html"),
-        Chapter("Spatial Partition", "spatial-partition.html")
+        Chapter("Section"),
+        Chapter("Chapter", "chapter.html"),
     ]
 
     def get_chapters(self):
@@ -452,12 +422,6 @@ def check_sass(book: Book):
 
     subprocess.call(['sass', book.sass_style, book.css])
     print("{}✓{} style.css".format(GREEN, DEFAULT))
-
-
-# num_chapters = 0
-# empty_chapters = 0
-# total_words = 0
-# extension = "html"
 
 
 def handle_watch(args):
