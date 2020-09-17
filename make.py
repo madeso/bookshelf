@@ -483,13 +483,14 @@ def handle_build(args):
         extension = "xml"
         # del sys.argv[1]
 
-    file_filter = args.file_filter
+    file_filter = args.filter
     stat = Stat()
 
     format_files(file_filter, False, searchpath, nav, extension, stat)
-    average_word_count = stat.total_words / (stat.num_chapters - stat.empty_chapters)
+    valid_chapters = stat.num_chapters - stat.empty_chapters
+    average_word_count = stat.total_words / valid_chapters if valid_chapters > 0 else 0
     estimated_word_count = stat.total_words + (stat.empty_chapters * average_word_count)
-    percent_finished = stat.total_words * 100 / estimated_word_count
+    percent_finished = stat.total_words * 100 / estimated_word_count if estimated_word_count > 0 else 0
 
     print("{}/~{} words ({}%)".format(stat.total_words, estimated_word_count, percent_finished))
 
