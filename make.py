@@ -12,6 +12,16 @@ import pystache
 import markdown
 
 
+# todo(Gustav): replace color printing with library
+# todo(Gustav): move hardcoded book properties to json input
+# todo(Gustav): asset/index.<extension> -> templates/<type>/index.<something>
+# todo(Gustav): figure out sass/css setup or remove
+# todo(Gustav): support epub
+# todo(Gustav): make sure watch watches all the files
+# todo(Gustav): add sample css and templates
+# todo(Gustav): create functions should add a empty markdown
+
+
 GREEN = '\033[32m'
 RED = '\033[31m'
 DEFAULT = '\033[0m'
