@@ -2,6 +2,7 @@
 # Converts from the source markup format to HTML for the web version.
 
 import glob
+import pystache
 import os
 import re
 import subprocess
@@ -27,6 +28,17 @@ def file_exist(file: str) -> bool:
     return os.path.isfile(file)
 
 
+def run_markdown(contents: str):
+    body = markdown.markdown(contents, extensions=['extra', 'def_list', 'codehilite'])
+    body = body.replace('<aside markdown="1"', '<aside')
+    return body
+
+
+def change_extension(file: str, extension: str):
+    base = os.path.splitext(file)[0]
+    return base + "." + extension
+
+
 class Chapter:
     # if href is None then this is a header
     def __init__(self, title: str, href: str, is_header: bool = False):
@@ -35,6 +47,17 @@ class Chapter:
         self.is_header = is_header
         self.next_chapter = -1
         self.prev_chapter = -1
+        self.children = []
+    
+    def generate_html_list(self, extension: str, indent: str):
+        html = indent + '<li><a href="{}">{}</a>'.format(change_extension(self.href, extension), self.title)
+        if len(self.children) != 0:
+            html += '\n' + indent + '    <ul>\n'
+            for c in self.children:
+                html += c.generate_html_list(self, extension, indent + '    ') + '\n'
+            html += indent + '    </ul>\n' + indent
+        html += '</li>'
+        return html
 
 
 class Stat:
@@ -48,6 +71,9 @@ def get_project_file_name(folder) -> str:
 
 
 class Book:
+    title = 'My awesome book'
+    copyright = '2020 Gustav'
+    
     template = 'asset/template'
     index = 'asset/index'
     css = 'html/style.css'
@@ -230,8 +256,7 @@ def generate_output(parsed_markdown: ParsedMarkdown, template: str, book: Book, 
 
     contents = parsed_markdown.contents.replace('<aside', '<aside markdown="1"')
 
-    body = markdown.markdown(contents, extensions=['extra', 'def_list', 'codehilite'])
-    body = body.replace('<aside markdown="1"', '<aside')
+    body = run_markdown(contents)
 
     # body = smartypants.smartypants(body)
 
@@ -247,16 +272,42 @@ def generate_output(parsed_markdown: ParsedMarkdown, template: str, book: Book, 
     return output
 
 
+def generate_toc_html(book: Book, extension: str) -> str:
+    html = ''
+    for c in book.chapters:
+        html = html + c.generate_html_list(extension, '  ')
+    return html
+
+
+def pystache_render(filename, template, data):
+    renderer = pystache.renderer.Renderer(missing_tags='strict')
+    try:
+        return renderer.render(template, data)
+    except pystache.context.KeyNotFoundError as e:
+        print(filename, e)
+        return ''
+
+
 def format_index(book: Book, extension: str):
     template = ''
-    with open(book.index + extension) as f:
+    template_file = book.index + '.' + extension
+    with open(template_file) as f:
         template = f.read()
     
-    name = os.path.splitext(os.path.basename(book.index+extension))[0]
+    name = os.path.splitext(os.path.basename(book.index+'.'+extension))[0]
     output_file = output_path(extension, name)
 
+    data = {}
+    data['book_title'] = book.title
+    data['copyright'] = book.copyright
+    data['toc'] = generate_toc_html(book, extension)
+    data['sidebar'] = 'sidebar'
+    data['index'] = 'index'
+    data['first_page'] = change_extension(book.chapters[0].href, extension)
+    data['author'] = 'author'
+
     with open(output_file, 'w') as out:
-        output = template
+        output = pystache_render(template_file, template, data)
         out.write(output)
 
 
@@ -274,7 +325,7 @@ def format_file(chapter: Chapter, skip_up_to_date: bool, extension: str, stat: S
     modified = datetime.datetime.fromtimestamp(os.path.getmtime(path))
     mod_str = modified.strftime('%B %d, %Y')
 
-    with open(book.template + extension) as f:
+    with open(book.template + '.' + extension) as f:
         template = f.read()
 
     # Write the output.
