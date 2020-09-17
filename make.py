@@ -254,20 +254,24 @@ def generate_output(parsed_markdown: ParsedMarkdown, template: str, book: Book, 
     prev_link = generate_chapter_link(book, chapter.prev_chapter)
     next_link = generate_chapter_link(book, chapter.next_chapter)
 
-    contents = parsed_markdown.contents.replace('<aside', '<aside markdown="1"')
+    contents = parsed_markdown.contents
 
     body = run_markdown(contents)
 
     # body = smartypants.smartypants(body)
 
-    output = template
-    output = output.replace("{{title}}", title_text)
-    output = output.replace("{{section_header}}", section_header)
-    output = output.replace("{{header}}", parsed_markdown.title_html)
-    output = output.replace("{{body}}", body)
-    output = output.replace("{{prev}}", prev_link)
-    output = output.replace("{{next}}", next_link)
-    output = output.replace("{{navigation}}", navigation_to_html(parsed_markdown.title, parsed_markdown.navigation))
+    data = {}
+    data['title'] = title_text
+    data['section_header'] = section_header
+    data['header'] = parsed_markdown.title_html
+    data['body'] = body
+    data['prev'] = prev_link
+    data['next'] = next_link
+    data['book_title'] = book.title
+    data['copyright'] = book.copyright
+    data['navigation'] = navigation_to_html(parsed_markdown.title, parsed_markdown.navigation)
+
+    output = pystache_render(chapter.href, template, data)
     
     return output
 
