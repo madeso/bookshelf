@@ -21,62 +21,15 @@ DEFAULT = '\033[0m'
 PINK = '\033[91m'
 YELLOW = '\033[33m'
 
-CHAPTERS = [
-    "Acknowledgements",
-    "Introduction",
-    "Architecture, Performance, and Games",
-    "Design Patterns Revisited",
-    "Command",
-    "Flyweight",
-    "Observer",
-    "Prototype",
-    "Singleton",
-    "State",
-    "Sequencing Patterns",
-    "Double Buffer",
-    "Game Loop",
-    "Update Method",
-    "Behavioral Patterns",
-    "Bytecode",
-    "Subclass Sandbox",
-    "Type Object",
-    "Decoupling Patterns",
-    "Component",
-    "Event Queue",
-    "Service Locator",
-    "Optimization Patterns",
-    "Data Locality",
-    "Dirty Flag",
-    "Object Pool",
-    "Spatial Partition"
-]
 
-# URLs for hyperlinks to chapters. Note that the order is significant here.
-# The index in this list + 1 is the chapter's number in the table of contents.
-CHAPTER_HREFS = [
-    "acknowledgements.html",
-    "introduction.html",
-    "architecture-performance-and-games.html",
-    "command.html",
-    "flyweight.html",
-    "observer.html",
-    "prototype.html",
-    "singleton.html",
-    "state.html",
-    "double-buffer.html",
-    "game-loop.html",
-    "update-method.html",
-    "bytecode.html",
-    "subclass-sandbox.html",
-    "type-object.html",
-    "component.html",
-    "event-queue.html",
-    "service-locator.html",
-    "data-locality.html",
-    "dirty-flag.html",
-    "object-pool.html",
-    "spatial-partition.html"
-]
+class Chapter:
+    # if href is None then this is a header
+    def __init__(self, title: str, href: typing.Optional[str] = None):
+        self.title = title
+        self.href = href
+
+    def is_header(self):
+        return self.href is not None
 
 
 class Stat:
@@ -87,6 +40,46 @@ class Stat:
 
 class Book:
     searchpath = ('book/*.markdown')
+    chapters = [
+        Chapter("Acknowledgements", "acknowledgements.html"),
+        Chapter("Introduction", "introduction.html"),
+        Chapter("Architecture, Performance, and Games", "architecture-performance-and-games.html"),
+        
+        Chapter("Design Patterns Revisited"),
+        Chapter("Command", "command.html"),
+        Chapter("Flyweight", "flyweight.html"),
+        Chapter("Observer", "observer.html"),
+        Chapter("Prototype", "prototype.html"),
+        Chapter("Singleton", "singleton.html"),
+        Chapter("State", "state.html"),
+        
+        Chapter("Sequencing Patterns"),
+        Chapter("Double Buffer", "double-buffer.html"),
+        Chapter("Game Loop", "game-loop.html"),
+        Chapter("Update Method", "update-method.html"),
+        
+        Chapter("Behavioral Patterns"),
+        Chapter("Bytecode", "bytecode.html"),
+        Chapter("Subclass Sandbox", "subclass-sandbox.html"),
+        Chapter("Type Object", "type-object.html"),
+        
+        Chapter("Decoupling Patterns"),
+        Chapter("Component", "component.html"),
+        Chapter("Event Queue", "event-queue.html"),
+        Chapter("Service Locator", "service-locator.html"),
+
+        Chapter("Optimization Patterns"),
+        Chapter("Data Locality", "data-locality.html"),
+        Chapter("Dirty Flag", "dirty-flag.html"),
+        Chapter("Object Pool", "object-pool.html"),
+        Chapter("Spatial Partition", "spatial-partition.html")
+    ]
+
+    def get_chapters(self):
+        return [c.title for c in self.chapters]
+    
+    def get_hrefs(self):
+        return [c.href for c in self.chapters if c.href is not None]
 
 
 def output_path(extension, pattern):
@@ -107,7 +100,7 @@ def pretty(text):
     return text
 
 
-def format_file(path, nav, skip_up_to_date, extension, stat: Stat):
+def format_file(path, nav, skip_up_to_date, extension, stat: Stat, book: Book):
     basename = os.path.basename(path)
     basename = basename.split('.')[0]
 
@@ -193,7 +186,7 @@ def format_file(path, nav, skip_up_to_date, extension, stat: Stat):
             section_href = section.lower().replace(" ", "-")
             section_header = '<span class="section"><a href="{}.html">{}</a></span>'.format(section_href, section)
 
-        prev_link, next_link = make_prev_next(title)
+        prev_link, next_link = make_prev_next(title, book)
 
         contents = contents.replace('<aside', '<aside markdown="1"')
 
@@ -212,7 +205,7 @@ def format_file(path, nav, skip_up_to_date, extension, stat: Stat):
         output = output.replace("{{navigation}}", navigation_to_html(title, navigation))
 
         if extension == "xml":
-            output = clean_up_xml(output)
+            output = clean_up_xml(output, book)
 
         out.write(output)
 
@@ -237,7 +230,7 @@ def format_file(path, nav, skip_up_to_date, extension, stat: Stat):
         print("{}•{} {} ({} words)".format(GREEN, DEFAULT, basename, word_count))
 
 
-def clean_up_xml(output) -> str:
+def clean_up_xml(output, book: Book) -> str:
     """Takes the XHTML output and massages it to play nicer with InDesign's XML
     import... idiosyncracies."""
 
@@ -266,11 +259,11 @@ def clean_up_xml(output) -> str:
 
         # If it's not a link to a chapter, just return the contents of the link and
         # strip out the link itself.
-        if not href in CHAPTER_HREFS:
+        if not href in book.get_hrefs():
             return contents
 
         # Turn it into a chapter number reference.
-        return "{}<chap-ref> ({})</chap-ref>".format(contents, CHAPTER_HREFS.index(href) + 1)
+        return "{}<chap-ref> ({})</chap-ref>".format(contents, book.get_hrefs().index(href) + 1)
 
     def clean_up_xhtml(html):
         # Replace chapter links with chapter number references and remove other
@@ -324,19 +317,19 @@ def title_to_file(title):
     return title.lower().replace(" ", "-").replace(",", "")
 
 
-def make_prev_next(title):
+def make_prev_next(title, book: Book):
     """Generate the links that thread through the chapters."""
-    chapter_index = CHAPTERS.index(title)
+    chapter_index = book.get_chapters().index(title)
     prev_link = ""
     next_link = ""
     if chapter_index > 0:
-        prev_href = title_to_file(CHAPTERS[chapter_index - 1])
-        chapter_title = CHAPTERS[chapter_index - 1]
+        prev_href = title_to_file(book.get_chapters()[chapter_index - 1])
+        chapter_title = book.get_chapters()[chapter_index - 1]
         prev_link = '<span class="prev">&larr; <a href="{}.html">Previous Chapter</a></span>'.format(prev_href)
 
-    if chapter_index < len(CHAPTERS) - 1:
-        next_href = title_to_file(CHAPTERS[chapter_index + 1])
-        chapter_title = CHAPTERS[chapter_index + 1]
+    if chapter_index < len(book.get_chapters()) - 1:
+        next_href = title_to_file(book.get_chapters()[chapter_index + 1])
+        chapter_title = book.get_chapters()[chapter_index + 1]
         next_link = '<span class="next"><a href="{}.html">Next Chapter</a> &rarr;</span>'.format(next_href)
 
     return (prev_link, next_link)
@@ -448,7 +441,7 @@ def format_files(file_filter: typing.Optional[str], skip_up_to_date: bool, book:
     '''Process each markdown file.'''
     for f in glob.iglob(book.searchpath):
         if file_filter is None or file_filter in f:
-            format_file(f, nav, skip_up_to_date, extension, stat)
+            format_file(f, nav, skip_up_to_date, extension, stat, book)
 
 
 def check_sass():
