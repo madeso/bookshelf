@@ -5,7 +5,7 @@ import glob
 import os
 import re
 import subprocess
-# import sys
+import typing
 import argparse
 import time
 from datetime import datetime
@@ -83,6 +83,10 @@ class Stat:
     num_chapters = 0
     empty_chapters = 0
     total_words = 0
+
+
+class Book:
+    searchpath = ('book/*.markdown')
 
 
 def output_path(extension, pattern):
@@ -233,7 +237,7 @@ def format_file(path, nav, skip_up_to_date, extension, stat: Stat):
         print("{}•{} {} ({} words)".format(GREEN, DEFAULT, basename, word_count))
 
 
-def clean_up_xml(output):
+def clean_up_xml(output) -> str:
     """Takes the XHTML output and massages it to play nicer with InDesign's XML
     import... idiosyncracies."""
 
@@ -417,7 +421,7 @@ def include_code(pattern, index, indentation):
     return code
 
 
-def buildnav(searchpath):
+def buildnav(book: Book):
     nav = '<div class="nav">\n'
     nav = nav + '<h1><a href="/">Navigation</a></h1>\n'
 
@@ -440,9 +444,9 @@ def buildnav(searchpath):
     return nav
 
 
-def format_files(file_filter, skip_up_to_date, searchpath, nav, extension, stat: Stat):
+def format_files(file_filter: typing.Optional[str], skip_up_to_date: bool, book: Book, nav: str, extension: str, stat: Stat):
     '''Process each markdown file.'''
-    for f in glob.iglob(searchpath):
+    for f in glob.iglob(book.searchpath):
         if file_filter is None or file_filter in f:
             format_file(f, nav, skip_up_to_date, extension, stat)
 
@@ -465,19 +469,19 @@ def check_sass():
 
 def handle_watch(args):
     extension = "html"
-    searchpath = ('book/*.markdown')
-    nav = buildnav(searchpath)
+    book = Book()
+    nav = buildnav(book)
     while True:
         stat = Stat()
-        format_files(None, True, searchpath, nav, extension, stat)
+        format_files(None, True, book, nav, extension, stat)
         check_sass()
         time.sleep(0.3)
 
 
 def handle_build(args):
     extension = "html"
-    searchpath = ('book/*.markdown')
-    nav = buildnav(searchpath)
+    book = Book()
+    nav = buildnav(book)
 
     if args.xml:
         extension = "xml"
@@ -486,7 +490,7 @@ def handle_build(args):
     file_filter = args.filter
     stat = Stat()
 
-    format_files(file_filter, False, searchpath, nav, extension, stat)
+    format_files(file_filter, False, book, nav, extension, stat)
     valid_chapters = stat.num_chapters - stat.empty_chapters
     average_word_count = stat.total_words / valid_chapters if valid_chapters > 0 else 0
     estimated_word_count = stat.total_words + (stat.empty_chapters * average_word_count)
