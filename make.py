@@ -9,6 +9,7 @@ import typing
 import argparse
 import time
 import datetime
+import json
 
 import markdown
 # import smartypants
@@ -20,6 +21,10 @@ RED = '\033[31m'
 DEFAULT = '\033[0m'
 PINK = '\033[91m'
 YELLOW = '\033[33m'
+
+
+def file_exist(file: str) -> bool:
+    return os.path.isfile(file)
 
 
 class Chapter:
@@ -38,6 +43,10 @@ class Stat:
     total_words = 0
 
 
+def get_project_file_name(folder) -> str:
+    return os.path.join(folder, '.book.json')
+
+
 class Book:
     template = 'asset/template.html'
     index_page = 'html/index.html'
@@ -54,6 +63,55 @@ class Book:
     
     def get_hrefs(self):
         return [c.href for c in self.chapters if c.href is not None]
+
+    def load(self, data):
+        self.template = data['template']
+        self.index_page = data['index_page']
+        self.css = data['css']
+        self.sass_style = data['sass_style']
+        self.searchpath = data['searchpath']
+        chapters = data['chapters']
+        self.chapters = []
+        for cc in chapters:
+            title = cc['title']
+            if 'href' in cc:
+                c = Chapter(title, cc['href'])
+            else:
+                c = Chapter(title)
+            self.chapters.append(c)
+
+    def save(self):
+        data = {}
+        data['template'] = self.template
+        data['index_page'] = self.index_page
+        data['css'] = self.css
+        data['sass_style'] = self.sass_style
+        data['searchpath'] = self.searchpath
+        chapters = []
+        for c in self.chapters:
+            cc = {}
+            cc['title'] = c.title
+            if c.href is not None:
+                cc['href'] = c.href
+            chapters.append(cc)
+        data['chapters'] = chapters
+        return data
+
+
+def get_book(folder) -> Book:
+    if file_exist(get_project_file_name(folder)):
+        with open(get_project_file_name(folder), 'r') as f:
+            book = Book()
+            data = json.loads(f.read())
+            book.load(data)
+            return book
+    else:
+        return Book()
+
+
+def set_book(folder, book: Book):
+    with open(get_project_file_name(folder), 'w') as f:
+        print(json.dumps(book.save(), indent=4), file=f)
 
 
 def output_path(extension, pattern):
@@ -426,7 +484,7 @@ def check_sass(book: Book):
 
 def handle_watch(args):
     extension = "html"
-    book = Book()
+    book = get_book(args.folder)
     nav = buildnav(book)
     while True:
         stat = Stat()
@@ -437,7 +495,7 @@ def handle_watch(args):
 
 def handle_build(args):
     extension = "html"
-    book = Book()
+    book = get_book(args.folder)
     nav = buildnav(book)
 
     if args.xml:
@@ -456,17 +514,53 @@ def handle_build(args):
     print("{}/~{} words ({}%)".format(stat.total_words, estimated_word_count, percent_finished))
 
 
+def handle_init(args):
+    book = Book()
+    set_book(args.folder, book)
+
+
+def handle_chapter(args):
+    book = get_book(args.folder)
+    href = args.href if args.href is not None else title_to_file(args.title)+'.html'
+    book.chapters.append(Chapter(args.title, href))
+    set_book(args.folder, book)
+
+
+def handle_section(args):
+    book = get_book(args.folder)
+    book.chapters.append(Chapter(args.title))
+    set_book(args.folder, book)
+
+
+
 def main():
     parser = argparse.ArgumentParser(description='Create or write a book')
     sub_parsers = parser.add_subparsers(dest='command_name', title='Commands', help='', metavar='<command>')
 
     sub = sub_parsers.add_parser('watch', help='Watch file for changes')
+    sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
     sub.set_defaults(func=handle_watch)
 
     sub = sub_parsers.add_parser('build', help='Build book')
     sub.add_argument('--xml', action='store_true', help='Use XML')
+    sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
     sub.add_argument('--filter', help='specify a file name filter to just regenerate a subset of the files')
     sub.set_defaults(func=handle_build)
+
+    sub = sub_parsers.add_parser('chapter', help='Add a chapter to the book')
+    sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
+    sub.add_argument('title', help='the title of the chapter')
+    sub.add_argument('--href', help='the href of the chapter', default=None)
+    sub.set_defaults(func=handle_chapter)
+
+    sub = sub_parsers.add_parser('section', help='Add a section to the book')
+    sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
+    sub.add_argument('title', help='the title of the section')
+    sub.set_defaults(func=handle_section)
+
+    sub = sub_parsers.add_parser('init', help='Create a new book')
+    sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
+    sub.set_defaults(func=handle_init)
 
     args = parser.parse_args()
     if args.command_name is not None:
