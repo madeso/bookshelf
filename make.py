@@ -54,7 +54,7 @@ class Chapter:
         if len(self.children) != 0:
             html += '\n' + indent + '    <ul>\n'
             for c in self.children:
-                html += c.generate_html_list(self, extension, indent + '    ') + '\n'
+                html += c.generate_html_list(extension, indent + '    ') + '\n'
             html += indent + '    </ul>\n' + indent
         html += '</li>'
         return html
@@ -82,6 +82,23 @@ class Book:
         Chapter("Section", 'section.md', is_header=True),
         Chapter("Chapter", "chapter.md"),
     ]
+    root_chapters = []
+
+    def update_chapters(self):
+        # start clean
+        self.root_chapters = []
+        for chapter in self.chapters:
+            chapter.children = []
+
+        last_root = None
+        for index, chapter in enumerate(self.chapters):
+            chapter.prev_chapter = index - 1
+            chapter.next_chapter = index + 1
+            if chapter.is_header:
+                last_root = chapter
+                self.root_chapters.append(chapter)
+            elif last_root is not None:
+                last_root.children.append(chapter)
 
     def get_chapters(self):
         return [c.title for c in self.chapters]
@@ -102,6 +119,8 @@ class Book:
             is_header = cc['is_header']
             c = Chapter(title, href, is_header)
             self.chapters.append(c)
+        
+        self.update_chapters()
 
     def save(self):
         data = {}
@@ -233,16 +252,16 @@ def read_markdown(path: str, extension: str, basename: str) -> ParsedMarkdown:
     return ParsedMarkdown(title, title_html, section, contents, navigation)
 
 
-def generate_chapter_link(book: Book, chapter_index: int) -> str:
+def generate_chapter_link(book: Book, chapter_index: int, extension: str) -> str:
     if chapter_index < 0:
         return ''
     if chapter_index >= len(book.chapters):
         return ''
         
-    return book.chapters[chapter_index].href
+    return change_extension(book.chapters[chapter_index].href, extension)
 
 
-def generate_output(parsed_markdown: ParsedMarkdown, template: str, book: Book, chapter: Chapter) -> str:
+def generate_output(parsed_markdown: ParsedMarkdown, template: str, book: Book, chapter: Chapter, extension: str) -> str:
     title_text = parsed_markdown.title
     section_header = ""
 
@@ -251,8 +270,8 @@ def generate_output(parsed_markdown: ParsedMarkdown, template: str, book: Book, 
         section_href = parsed_markdown.section.lower().replace(" ", "-")
         section_header = '<span class="section"><a href="{}.html">{}</a></span>'.format(section_href, parsed_markdown.section)
 
-    prev_link = generate_chapter_link(book, chapter.prev_chapter)
-    next_link = generate_chapter_link(book, chapter.next_chapter)
+    prev_link = generate_chapter_link(book, chapter.prev_chapter, extension)
+    next_link = generate_chapter_link(book, chapter.next_chapter, extension)
 
     contents = parsed_markdown.contents
 
@@ -278,7 +297,7 @@ def generate_output(parsed_markdown: ParsedMarkdown, template: str, book: Book, 
 
 def generate_toc_html(book: Book, extension: str) -> str:
     html = ''
-    for c in book.chapters:
+    for c in book.root_chapters:
         html = html + c.generate_html_list(extension, '  ')
     return html
 
@@ -334,7 +353,7 @@ def format_file(chapter: Chapter, skip_up_to_date: bool, extension: str, stat: S
 
     # Write the output.
     with open(output_file, 'w') as out:
-        output = generate_output(parsed_markdown, template, book, chapter)
+        output = generate_output(parsed_markdown, template, book, chapter, extension)
 
         if extension == "xml":
             output = clean_up_xml(output, book)
