@@ -29,12 +29,12 @@ def file_exist(file: str) -> bool:
 
 class Chapter:
     # if href is None then this is a header
-    def __init__(self, title: str, href: typing.Optional[str] = None):
+    def __init__(self, title: str, href: str, is_header: bool = False):
         self.title = title
         self.href = href
-
-    def is_header(self):
-        return self.href is not None
+        self.is_header = is_header
+        self.next_chapter = -1
+        self.prev_chapter = -1
 
 
 class Stat:
@@ -52,32 +52,29 @@ class Book:
     index_page = 'html/index.html'
     css = 'html/style.css'
     sass_style = 'asset/style.scss'
-    searchpath = 'book/*.md'
     chapters = [
-        Chapter("Section"),
-        Chapter("Chapter", "chapter.html"),
+        Chapter("Section", 'section.md', is_header=True),
+        Chapter("Chapter", "chapter.md"),
     ]
 
     def get_chapters(self):
         return [c.title for c in self.chapters]
     
     def get_hrefs(self):
-        return [c.href for c in self.chapters if c.href is not None]
+        return [c.href for c in self.chapters if c.is_header]
 
     def load(self, data):
         self.template = data['template']
         self.index_page = data['index_page']
         self.css = data['css']
         self.sass_style = data['sass_style']
-        self.searchpath = data['searchpath']
         chapters = data['chapters']
         self.chapters = []
         for cc in chapters:
             title = cc['title']
-            if 'href' in cc:
-                c = Chapter(title, cc['href'])
-            else:
-                c = Chapter(title)
+            href = cc['href']
+            is_header = cc['is_header']
+            c = Chapter(title, href, is_header)
             self.chapters.append(c)
 
     def save(self):
@@ -86,13 +83,12 @@ class Book:
         data['index_page'] = self.index_page
         data['css'] = self.css
         data['sass_style'] = self.sass_style
-        data['searchpath'] = self.searchpath
         chapters = []
         for c in self.chapters:
             cc = {}
             cc['title'] = c.title
-            if c.href is not None:
-                cc['href'] = c.href
+            cc['href'] = c.href
+            cc['is_header'] = c.is_header
             chapters.append(cc)
         data['chapters'] = chapters
         return data
@@ -132,32 +128,38 @@ def pretty(text):
     return text
 
 
-def format_file(path, nav, skip_up_to_date, extension, stat: Stat, book: Book):
-    basename = os.path.basename(path)
-    basename = basename.split('.')[0]
+def is_up_to_date(path, output, book: Book, basename) -> bool:
+    sourcemod = max(os.path.getmtime(path), os.path.getmtime(book.template))
 
-    # See if the HTML is up to date.
-    sourcemod = os.path.getmtime(path)
-    sourcemod = max(sourcemod, os.path.getmtime(book.template))
+    # todo(Gustav): keep or extend?
     if os.path.exists(cpp_path(basename)):
         sourcemod = max(sourcemod, os.path.getmtime(cpp_path(basename)))
 
     destmod = 0
-    if os.path.exists(output_path(extension, basename)):
-        destmod = max(destmod, os.path.getmtime(output_path(extension, basename)))
+    if os.path.exists(output):
+        destmod = max(destmod, os.path.getmtime(output))
+    
+    return sourcemod < destmod
 
-    if skip_up_to_date and sourcemod < destmod:
-        return
 
+class ParsedMarkdown:
+    def __init__(self, title, title_html, section, contents, navigation):
+        self.title = title
+        self.title_html = title_html
+        self.section = section
+        self.contents = contents
+        self.navigation = navigation
+
+
+def read_markdown(path: str, extension: str, basename: str) -> ParsedMarkdown:
+    """Read the markdown file and preprocess it"""
     title = ''
     title_html = ''
     section = ''
     isoutline = False
-
     navigation = []
-
-    # Read the markdown file and preprocess it.
     contents = ''
+
     with open(path, 'r') as input_file:
         # Read each line, preprocessing the special codes.
         for line in input_file:
@@ -201,6 +203,60 @@ def format_file(path, nav, skip_up_to_date, extension, stat: Stat, book: Book):
 
             else:
                 contents += pretty(line)
+    
+    return ParsedMarkdown(title, title_html, section, contents, navigation)
+
+
+def generate_chapter_link(book: Book, chapter_index: int) -> str:
+    if chapter_index < 0:
+        return ''
+    if chapter_index >= len(book.chapters):
+        return ''
+        
+    return book.chapters[chapter_index].href
+
+
+def generate_output(parsed_markdown: ParsedMarkdown, template: str, book: Book, chapter: Chapter) -> str:
+    title_text = parsed_markdown.title
+    section_header = ""
+
+    if parsed_markdown.section != "":
+        title_text = parsed_markdown.title + " &middot; " + parsed_markdown.section
+        section_href = parsed_markdown.section.lower().replace(" ", "-")
+        section_header = '<span class="section"><a href="{}.html">{}</a></span>'.format(section_href, parsed_markdown.section)
+
+    prev_link = generate_chapter_link(book, chapter.prev_chapter)
+    next_link = generate_chapter_link(book, chapter.next_chapter)
+
+    contents = parsed_markdown.contents.replace('<aside', '<aside markdown="1"')
+
+    body = markdown.markdown(contents, extensions=['extra', 'def_list', 'codehilite'])
+    body = body.replace('<aside markdown="1"', '<aside')
+
+    # body = smartypants.smartypants(body)
+
+    output = template
+    output = output.replace("{{title}}", title_text)
+    output = output.replace("{{section_header}}", section_header)
+    output = output.replace("{{header}}", parsed_markdown.title_html)
+    output = output.replace("{{body}}", body)
+    output = output.replace("{{prev}}", prev_link)
+    output = output.replace("{{next}}", next_link)
+    output = output.replace("{{navigation}}", navigation_to_html(parsed_markdown.title, parsed_markdown.navigation))
+    
+    return output
+
+
+def format_file(chapter: Chapter, nav, skip_up_to_date: bool, extension: str, stat: Stat, book: Book):
+    path = os.path.join('book', chapter.href) # book/the_file.md
+    basename = os.path.splitext(chapter.href)[0] # the_file
+    output_file = output_path(extension, basename)
+
+    if skip_up_to_date and is_up_to_date(path, output_file, book, basename):
+        # See if the HTML is up to date
+        return
+        
+    parsed_markdown = read_markdown(path, extension, basename)
 
     modified = datetime.datetime.fromtimestamp(os.path.getmtime(path))
     mod_str = modified.strftime('%B %d, %Y')
@@ -209,40 +265,16 @@ def format_file(path, nav, skip_up_to_date, extension, stat: Stat, book: Book):
         template = f.read()
 
     # Write the output.
-    with open(output_path(extension, basename), 'w') as out:
-        title_text = title
-        section_header = ""
-
-        if section != "":
-            title_text = title + " &middot; " + section
-            section_href = section.lower().replace(" ", "-")
-            section_header = '<span class="section"><a href="{}.html">{}</a></span>'.format(section_href, section)
-
-        prev_link, next_link = make_prev_next(title, book)
-
-        contents = contents.replace('<aside', '<aside markdown="1"')
-
-        body = markdown.markdown(contents, extensions=['extra', 'def_list', 'codehilite'])
-        body = body.replace('<aside markdown="1"', '<aside')
-
-        # body = smartypants.smartypants(body)
-
-        output = template
-        output = output.replace("{{title}}", title_text)
-        output = output.replace("{{section_header}}", section_header)
-        output = output.replace("{{header}}", title_html)
-        output = output.replace("{{body}}", body)
-        output = output.replace("{{prev}}", prev_link)
-        output = output.replace("{{next}}", next_link)
-        output = output.replace("{{navigation}}", navigation_to_html(title, navigation))
+    with open(output_file, 'w') as out:
+        output = generate_output(parsed_markdown, template, book, chapter)
 
         if extension == "xml":
             output = clean_up_xml(output, book)
 
         out.write(output)
 
-    word_count = len(contents.split(None))
-    if section:
+    word_count = len(parsed_markdown.contents.split(None))
+    if parsed_markdown.section:
         stat.num_chapters += 1
         if word_count < 50:
             stat.empty_chapters += 1
@@ -343,24 +375,6 @@ def title_to_file(title):
     name like "event-queue"."""
 
     return title.lower().replace(" ", "-").replace(",", "")
-
-
-def make_prev_next(title, book: Book):
-    """Generate the links that thread through the chapters."""
-    chapter_index = book.get_chapters().index(title)
-    prev_link = ""
-    next_link = ""
-    if chapter_index > 0:
-        prev_href = title_to_file(book.get_chapters()[chapter_index - 1])
-        chapter_title = book.get_chapters()[chapter_index - 1]
-        prev_link = '<span class="prev">&larr; <a href="{}.html">Previous Chapter</a></span>'.format(prev_href)
-
-    if chapter_index < len(book.get_chapters()) - 1:
-        next_href = title_to_file(book.get_chapters()[chapter_index + 1])
-        chapter_title = book.get_chapters()[chapter_index + 1]
-        next_link = '<span class="next"><a href="{}.html">Next Chapter</a> &rarr;</span>'.format(next_href)
-
-    return (prev_link, next_link)
 
 
 def navigation_to_html(chapter, headers):
@@ -467,9 +481,9 @@ def buildnav(book: Book):
 
 def format_files(file_filter: typing.Optional[str], skip_up_to_date: bool, book: Book, nav: str, extension: str, stat: Stat):
     '''Process each markdown file.'''
-    for f in glob.iglob(book.searchpath):
-        if file_filter is None or file_filter in f:
-            format_file(f, nav, skip_up_to_date, extension, stat, book)
+    for chapter in book.chapters:
+        if file_filter is None or file_filter in chapter.href:
+            format_file(chapter, nav, skip_up_to_date, extension, stat, book)
 
 
 def check_sass(book: Book):
@@ -506,6 +520,7 @@ def handle_build(args):
     stat = Stat()
 
     format_files(file_filter, False, book, nav, extension, stat)
+
     valid_chapters = stat.num_chapters - stat.empty_chapters
     average_word_count = stat.total_words / valid_chapters if valid_chapters > 0 else 0
     estimated_word_count = stat.total_words + (stat.empty_chapters * average_word_count)
@@ -521,14 +536,15 @@ def handle_init(args):
 
 def handle_chapter(args):
     book = get_book(args.folder)
-    href = args.href if args.href is not None else title_to_file(args.title)+'.html'
-    book.chapters.append(Chapter(args.title, href))
+    href = args.href if args.href is not None else title_to_file(args.title)+'.md'
+    book.chapters.append(Chapter(args.title, href, is_header=False))
     set_book(args.folder, book)
 
 
-def handle_section(args):
+def handle_header(args):
     book = get_book(args.folder)
-    book.chapters.append(Chapter(args.title))
+    href = args.href if args.href is not None else title_to_file(args.title)+'.md'
+    book.chapters.append(Chapter(args.title, href, is_header=True))
     set_book(args.folder, book)
 
 
@@ -553,10 +569,11 @@ def main():
     sub.add_argument('--href', help='the href of the chapter', default=None)
     sub.set_defaults(func=handle_chapter)
 
-    sub = sub_parsers.add_parser('section', help='Add a section to the book')
+    sub = sub_parsers.add_parser('header', help='Add a header to the book, headers are above chapters')
     sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
     sub.add_argument('title', help='the title of the section')
-    sub.set_defaults(func=handle_section)
+    sub.add_argument('--href', help='the href of the chapter', default=None)
+    sub.set_defaults(func=handle_header)
 
     sub = sub_parsers.add_parser('init', help='Create a new book')
     sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
