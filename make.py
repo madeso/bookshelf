@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-
 # Converts from the source markup format to HTML for the web version.
 
 import glob
 import os
 import re
 import subprocess
-import sys
+# import sys
+import argparse
 import time
 from datetime import datetime
 
 import markdown
-import smartypants
+# import smartypants
 
 # Assumes cwd is root project dir.
 
@@ -78,13 +78,14 @@ CHAPTER_HREFS = [
     "spatial-partition.html"
 ]
 
-num_chapters = 0
-empty_chapters = 0
-total_words = 0
 
-extension = "html"
+class Stat:
+    num_chapters = 0
+    empty_chapters = 0
+    total_words = 0
 
-def output_path(pattern):
+
+def output_path(extension, pattern):
     return extension + "/" + pattern + "." + extension
 
 
@@ -102,7 +103,7 @@ def pretty(text):
     return text
 
 
-def format_file(path, nav, skip_up_to_date):
+def format_file(path, nav, skip_up_to_date, extension, stat: Stat):
     basename = os.path.basename(path)
     basename = basename.split('.')[0]
 
@@ -113,8 +114,8 @@ def format_file(path, nav, skip_up_to_date):
         sourcemod = max(sourcemod, os.path.getmtime(cpp_path(basename)))
 
     destmod = 0
-    if os.path.exists(output_path(basename)):
-        destmod = max(destmod, os.path.getmtime(output_path(basename)))
+    if os.path.exists(output_path(extension, basename)):
+        destmod = max(destmod, os.path.getmtime(output_path(extension, basename)))
 
     if skip_up_to_date and sourcemod < destmod:
         return
@@ -135,7 +136,7 @@ def format_file(path, nav, skip_up_to_date):
             indentation = line[:len(line) - len(stripped)]
 
             if stripped.startswith('^'):
-                command,_,args = stripped.rstrip('\n').lstrip('^').partition(' ')
+                command, _, args = stripped.rstrip('\n').lstrip('^').partition(' ')
                 args = args.strip()
 
                 if command == 'title':
@@ -179,7 +180,7 @@ def format_file(path, nav, skip_up_to_date):
         template = f.read()
 
     # Write the output.
-    with open(output_path(basename), 'w') as out:
+    with open(output_path(extension, basename), 'w') as out:
         title_text = title
         section_header = ""
 
@@ -195,7 +196,7 @@ def format_file(path, nav, skip_up_to_date):
         body = markdown.markdown(contents, extensions=['extra', 'def_list', 'codehilite'])
         body = body.replace('<aside markdown="1"', '<aside')
 
-        body = smartypants.smartypants(body)
+        # body = smartypants.smartypants(body)
 
         output = template
         output = output.replace("{{title}}", title_text)
@@ -211,21 +212,21 @@ def format_file(path, nav, skip_up_to_date):
 
         out.write(output)
 
-    global total_words
-    global num_chapters
-    global empty_chapters
+    # global total_words
+    # global num_chapters
+    # global empty_chapters
 
     word_count = len(contents.split(None))
     if section:
-        num_chapters += 1
+        stat.num_chapters += 1
         if word_count < 50:
-            empty_chapters += 1
+            stat.empty_chapters += 1
             print("    {}".format(basename))
         elif word_count < 2000:
-            empty_chapters += 1
+            stat.empty_chapters += 1
             print("{}-{} {} ({} words)".format(YELLOW, DEFAULT, basename, word_count))
         else:
-            total_words += word_count
+            stat.total_words += word_count
             print("{}✓{} {} ({} words)".format(GREEN, DEFAULT, basename, word_count))
     else:
         # Section header chapters aren't counted like regular chapters.
@@ -243,12 +244,10 @@ def clean_up_xml(output):
 
     def clean_up_code_xml(code):
         # Ditch most code formatting tags.
-        code = re.sub(r'<span class="(k|kt|mi|n|nb|nc|nf|nl|o|p)">([^<]+)</span>',
-                                    r"\2", code)
+        code = re.sub(r'<span class="(k|kt|mi|n|nb|nc|nf|nl|o|p)">([^<]+)</span>', r"\2", code)
 
         # Turn comments into something InDesign can map to a style.
-        code = re.sub(r'<span class="(c1|cn)">([^<]+)</span>',
-                                    r"<comment>\2</comment>", code)
+        code = re.sub(r'<span class="(c1|cn)">([^<]+)</span>', r"<comment>\2</comment>", code)
 
         # Turn newlines into soft returns so code blocks stay one paragraph, except
         # for the last one.
@@ -328,11 +327,13 @@ def make_prev_next(title):
     next_link = ""
     if chapter_index > 0:
         prev_href = title_to_file(CHAPTERS[chapter_index - 1])
-        prev_link = '<span class="prev">&larr; <a href="{}.html">Previous Chapter</a></span>'.format(prev_href, CHAPTERS[chapter_index - 1])
+        chapter_title = CHAPTERS[chapter_index - 1]
+        prev_link = '<span class="prev">&larr; <a href="{}.html">Previous Chapter</a></span>'.format(prev_href)
 
     if chapter_index < len(CHAPTERS) - 1:
         next_href = title_to_file(CHAPTERS[chapter_index + 1])
-        next_link = '<span class="next"><a href="{}.html">Next Chapter</a> &rarr;</span>'.format(next_href, CHAPTERS[chapter_index + 1])
+        chapter_title = CHAPTERS[chapter_index + 1]
+        next_link = '<span class="next"><a href="{}.html">Next Chapter</a> &rarr;</span>'.format(next_href)
 
     return (prev_link, next_link)
 
@@ -428,7 +429,7 @@ def buildnav(searchpath):
             if innav:
                 nav = nav + line
                 if line.startswith('</ul'):
-                    break;
+                    break
             else:
                 if line.startswith('<ul>'):
                     nav = nav + line
@@ -439,11 +440,11 @@ def buildnav(searchpath):
     return nav
 
 
-def format_files(file_filter, skip_up_to_date):
+def format_files(file_filter, skip_up_to_date, searchpath, nav, extension, stat: Stat):
     '''Process each markdown file.'''
     for f in glob.iglob(searchpath):
-        if file_filter == None or file_filter in f:
-            format_file(f, nav, skip_up_to_date)
+        if file_filter is None or file_filter in f:
+            format_file(f, nav, skip_up_to_date, extension, stat)
 
 
 def check_sass():
@@ -456,29 +457,60 @@ def check_sass():
     print("{}✓{} style.css".format(GREEN, DEFAULT))
 
 
-searchpath = ('book/*.markdown')
+# num_chapters = 0
+# empty_chapters = 0
+# total_words = 0
+# extension = "html"
 
-nav = buildnav(searchpath)
 
-if len(sys.argv) == 2 and sys.argv[1] == '--watch':
+def handle_watch(args):
+    extension = "html"
+    searchpath = ('book/*.markdown')
+    nav = buildnav(searchpath)
     while True:
-        format_files(None, True)
+        stat = Stat()
+        format_files(None, True, searchpath, nav, extension, stat)
         check_sass()
         time.sleep(0.3)
-else:
-    if len(sys.argv) > 1 and sys.argv[1] == '--xml':
+
+
+def handle_build(args):
+    extension = "html"
+    searchpath = ('book/*.markdown')
+    nav = buildnav(searchpath)
+
+    if args.xml:
         extension = "xml"
-        del sys.argv[1]
+        # del sys.argv[1]
 
-    # Can specify a file name filter to just regenerate a subset of the files.
-    file_filter = None
-    if len(sys.argv) > 1:
-        file_filter = sys.argv[1]
+    file_filter = args.file_filter
+    stat = Stat()
 
-    format_files(file_filter, False)
+    format_files(file_filter, False, searchpath, nav, extension, stat)
+    average_word_count = stat.total_words / (stat.num_chapters - stat.empty_chapters)
+    estimated_word_count = stat.total_words + (stat.empty_chapters * average_word_count)
+    percent_finished = stat.total_words * 100 / estimated_word_count
 
-    average_word_count = total_words / (num_chapters - empty_chapters)
-    estimated_word_count = total_words + (empty_chapters * average_word_count)
-    percent_finished = total_words * 100 / estimated_word_count
+    print("{}/~{} words ({}%)".format(stat.total_words, estimated_word_count, percent_finished))
 
-    print("{}/~{} words ({}%)".format(total_words, estimated_word_count, percent_finished))
+
+def main():
+    parser = argparse.ArgumentParser(description='Create or write a book')
+    sub_parsers = parser.add_subparsers(dest='command_name', title='Commands', help='', metavar='<command>')
+
+    sub = sub_parsers.add_parser('watch', help='Watch file for changes')
+    sub.set_defaults(func=handle_watch)
+
+    sub = sub_parsers.add_parser('build', help='Build book')
+    sub.add_argument('--xml', action='store_true', help='Use XML')
+    sub.add_argument('--filter', help='specify a file name filter to just regenerate a subset of the files')
+    sub.set_defaults(func=handle_build)
+
+    args = parser.parse_args()
+    if args.command_name is not None:
+        args.func(args)
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()
