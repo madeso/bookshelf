@@ -33,7 +33,7 @@ def file_exist(file: str) -> bool:
 
 
 def read_file(path: str) -> str:
-    print('reading ' + path)
+    # print('reading ' + path)
     with open(path, 'r', encoding='utf-8') as input_file:
         return input_file.read()
 
@@ -85,10 +85,11 @@ class Stat:
 
 
 def get_project_file_name(folder) -> str:
-    return os.path.join(folder, '.book.json')
+    return os.path.join(folder, 'book.json')
 
 
 class Book:
+    book_json = ''
     chapter_folder = 'book'
     title = 'My awesome book'
     copyright = '2020 Gustav'
@@ -118,9 +119,12 @@ class Book:
             if chapter.is_header:
                 last_root = chapter
                 self.root_chapters.append(chapter)
-            elif last_root is not None:
-                last_root.children.append(chapter)
-                chapter.parent = last_root
+            else:
+                if last_root is not None:
+                    last_root.children.append(chapter)
+                    chapter.parent = last_root
+                else:
+                    self.root_chapters.append(chapter)
 
     def get_chapters(self):
         return [c.title for c in self.chapters]
@@ -176,17 +180,21 @@ class Book:
 
 
 def get_book(folder) -> Book:
-    if file_exist(get_project_file_name(folder)):
+    file_path = get_project_file_name(folder)
+    if file_exist(file_path):
         book = Book()
-        data = json.loads(read_file(get_project_file_name(folder)))
+        data = json.loads(read_file(file_path))
         book.load(data)
+        book.book_json = file_path
         return book
     else:
-        return Book()
+        book = Book()
+        book.book_json = file_path
+        return book
 
 
-def set_book(folder, book: Book):
-    write_file(json.dumps(book.save(), indent=4), get_project_file_name(folder))
+def set_book(book: Book):
+    write_file(json.dumps(book.save(), indent=4), book.book_json)
 
 
 def output_path(extension, pattern):
@@ -203,14 +211,20 @@ def pretty(text):
     return text
 
 
-def is_up_to_date(path, output, book: Book, extension: str) -> bool:
-    sourcemod = max(os.path.getmtime(path), os.path.getmtime(book.template + extension))
+def is_all_up_to_date(input_files: typing.List[str], output: str) -> bool:
+    sourcemod = 0
+    for path in input_files:
+        sourcemod = max(sourcemod, os.path.getmtime(path))
 
     destmod = 0
     if os.path.exists(output):
         destmod = max(destmod, os.path.getmtime(output))
     
     return sourcemod < destmod
+
+
+def is_up_to_date(path, output, book: Book, extension: str) -> bool:
+    return is_all_up_to_date([path, book.book_json, book.template + extension], output)
 
 
 def generate_chapter_link(book: Book, chapter_index: int, extension: str) -> str:
@@ -226,7 +240,7 @@ def generate_output(contents: str, template: str, book: Book, chapter: Chapter, 
     title_text = chapter.title
     section_header = ""
 
-    if chapter.is_header == False:
+    if chapter.is_header == False and chapter.parent is not None:
         parent = chapter.parent
         title_text = chapter.title + " &middot; " + parent.title
         section_href = change_extension(parent.href, extension)
@@ -270,13 +284,26 @@ def pystache_render(filename, template, data):
         return ''
 
 
-def format_index(book: Book, extension: str):
-    template = ''
-    template_file = book.index + extension
-    template = read_file(template_file)
-    
+def format_index(book: Book, skip_up_to_date: bool, extension: str):
     name = os.path.splitext(os.path.basename(book.index + extension))[0]
     output_file = output_path(extension, name)
+    template_file = book.index + extension
+
+    # todo(Gustav): include book.json for reflecting the date?
+    input_files = [
+        book.sidebar_md,
+        book.index_md,
+        book.author_md,
+        template_file,
+        book.book_json
+    ]
+
+    if skip_up_to_date and is_all_up_to_date(input_files, output_file):
+        # See if the HTML is up to date
+        return
+
+    
+    template = read_file(template_file)
 
     data = {}
     data['book_title'] = book.title
@@ -337,18 +364,21 @@ def title_to_file(title):
     """Given a title like "Event Queue", converts it to the corresponding file
     name like "event-queue"."""
 
-    return title.lower().replace(" ", "-").replace(",", "")
+    return title.lower().replace(" ", "-").replace(",", "").replace(":", "")
 
 
 def format_files(file_filter: typing.Optional[str], skip_up_to_date: bool, book: Book, extension: str, stat: Stat):
     '''Process each markdown file.'''
-    format_index(book, extension)
+    format_index(book, skip_up_to_date, extension)
     for chapter in book.chapters:
         if file_filter is None or file_filter in chapter.href:
             format_file(chapter, skip_up_to_date, extension, stat, book)
 
 
 def check_sass(book: Book):
+    if book.sass_style == '':
+        return
+    
     sourcemod = os.path.getmtime(book.sass_style)
     destmod = os.path.getmtime(book.css)
     if sourcemod < destmod:
@@ -360,8 +390,8 @@ def check_sass(book: Book):
 
 def handle_watch(args):
     extension = "html"
-    book = get_book(args.folder)
     while True:
+        book = get_book(args.folder)
         stat = Stat()
         format_files(None, True, book, extension, stat)
         check_sass(book)
@@ -387,10 +417,11 @@ def handle_build(args):
 
 def handle_init(args):
     book = Book()
-    set_book(args.folder, book)
-    write_file('', book.sidebar_md)
-    write_file('', book.index_md)
-    write_file('', book.author_md)
+    book.book_json = get_project_file_name(args.folder)
+    set_book(book)
+    write_file('sidebar', book.sidebar_md)
+    write_file('index', book.index_md)
+    write_file('author', book.author_md)
     
     # todo(Gustav): write defaults
     # template = 'templates/template.'
@@ -398,7 +429,7 @@ def handle_init(args):
     # css = 'html/style.css'
 
     for chapter in book.chapters:
-        write_file('', path_to_chapter(book, chapter))
+        write_file('write something here', path_to_chapter(book, chapter))
 
 
 def handle_chapter(args):
@@ -406,8 +437,8 @@ def handle_chapter(args):
     href = args.href if args.href is not None else title_to_file(args.title)+'.md'
     chapter = Chapter(args.title, href, is_header=False)
     book.chapters.append(chapter)
-    write_file('', path_to_chapter(book, chapter))
-    set_book(args.folder, book)
+    write_file('write something here', path_to_chapter(book, chapter))
+    set_book(book)
 
 
 def handle_header(args):
@@ -415,8 +446,8 @@ def handle_header(args):
     href = args.href if args.href is not None else title_to_file(args.title)+'.md'
     chapter = Chapter(args.title, href, is_header=True)
     book.chapters.append(chapter)
-    write_file('', path_to_chapter(book, chapter))
-    set_book(args.folder, book)
+    write_file('write something here', path_to_chapter(book, chapter))
+    set_book(book)
 
 
 def main():
@@ -454,5 +485,9 @@ def main():
     else:
         parser.print_help()
 
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
