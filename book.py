@@ -12,8 +12,8 @@ import pystache
 import markdown
 
 
-# todo(Gustav): replace color printing with library
 # todo(Gustav): move hardcoded book properties to json input
+# todo(Gustav): replace color printing with library
 # todo(Gustav): asset/index.<extension> -> templates/<type>/index.<something>
 # todo(Gustav): figure out sass/css setup or remove
 # todo(Gustav): support epub
@@ -34,12 +34,8 @@ def file_exist(file: str) -> bool:
 
 
 def read_file(path: str) -> str:
-    contents = ''
-
     with open(path, 'r', encoding='utf-8') as input_file:
-        contents = input_file.read()
-    
-    return contents
+        return input_file.read()
 
 
 def write_file(contents: str, path: str) -> str:
@@ -92,6 +88,9 @@ def get_project_file_name(folder) -> str:
 class Book:
     title = 'My awesome book'
     copyright = '2020 Gustav'
+    sidebar_md = 'book/sidebar.md'
+    index_md = 'book/index.md'
+    author_md = 'book/author.md'
     
     template = 'asset/template'
     index = 'asset/index'
@@ -266,10 +265,10 @@ def format_index(book: Book, extension: str):
     data['book_title'] = book.title
     data['copyright'] = book.copyright
     data['toc'] = generate_toc_html(book, extension)
-    data['sidebar'] = 'sidebar'
-    data['index'] = 'index'
+    data['sidebar'] = run_markdown(read_file(book.sidebar_md))
+    data['index'] = run_markdown(read_file(book.index_md))
     data['first_page'] = change_extension(book.chapters[0].href, extension)
-    data['author'] = 'author'
+    data['author'] = run_markdown(read_file(book.author_md))
 
     output = pystache_render(template_file, template, data)
     write_file(output, output_file)
