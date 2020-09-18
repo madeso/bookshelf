@@ -33,11 +33,15 @@ def file_exist(file: str) -> bool:
 
 
 def read_file(path: str) -> str:
+    print('reading ' + path)
     with open(path, 'r', encoding='utf-8') as input_file:
         return input_file.read()
 
 
 def write_file(contents: str, path: str) -> str:
+    print('writing ' + path)
+    directory = os.path.dirname(path)
+    os.makedirs(directory, exist_ok=True)
     with open(path, 'w', encoding='utf-8') as file_handle:
         print(contents, file=file_handle)
 
@@ -85,15 +89,16 @@ def get_project_file_name(folder) -> str:
 
 
 class Book:
+    chapter_folder = 'book'
     title = 'My awesome book'
     copyright = '2020 Gustav'
     sidebar_md = 'book/sidebar.md'
     index_md = 'book/index.md'
     author_md = 'book/author.md'
-    template = 'asset/template'
-    index = 'asset/index'
+    template = 'templates/template.'
+    index = 'templates/index.'
     css = 'html/style.css'
-    sass_style = 'asset/style.scss'
+    sass_style = '/style.scss'
     chapters = [
         Chapter("Section", 'section.md', is_header=True),
         Chapter("Chapter", "chapter.md"),
@@ -124,6 +129,7 @@ class Book:
         return [c.href for c in self.chapters if c.is_header]
 
     def load(self, data):
+        self.chapter_folder = data['chapter_folder']
         self.title = data['title']
         self.copyright = data['copyright']
         self.sidebar_md = data['sidebar_md']
@@ -148,6 +154,7 @@ class Book:
         data = {}
 
         #  also here
+        data['chapter_folder'] = self.chapter_folder
         data['title'] = self.title
         data['copyright'] = self.copyright
         data['sidebar_md'] = self.sidebar_md
@@ -265,10 +272,10 @@ def pystache_render(filename, template, data):
 
 def format_index(book: Book, extension: str):
     template = ''
-    template_file = book.index + '.' + extension
+    template_file = book.index + extension
     template = read_file(template_file)
     
-    name = os.path.splitext(os.path.basename(book.index+'.'+extension))[0]
+    name = os.path.splitext(os.path.basename(book.index + extension))[0]
     output_file = output_path(extension, name)
 
     data = {}
@@ -302,8 +309,13 @@ def update_wordcount(stat: Stat, contents: str, chapter: Chapter, basename: str)
         print("{}•{} {} ({} words)".format(GREEN, DEFAULT, basename, word_count))
 
 
+def path_to_chapter(book: Book, chapter: Chapter):
+    """ returns book/the_file.md """
+    return os.path.join(book.chapter_folder, chapter.href) # book/the_file.md
+
+
 def format_file(chapter: Chapter, skip_up_to_date: bool, extension: str, stat: Stat, book: Book):
-    path = os.path.join('book', chapter.href) # book/the_file.md
+    path = path_to_chapter(book, chapter)
     basename = os.path.splitext(chapter.href)[0] # the_file
     output_file = output_path(extension, basename)
 
@@ -312,7 +324,7 @@ def format_file(chapter: Chapter, skip_up_to_date: bool, extension: str, stat: S
         return
         
     contents = read_file(path)
-    template = read_file(book.template + '.' + extension)
+    template = read_file(book.template + extension)
 
     # Write the output.
     output = generate_output(contents, template, book, chapter, extension)
@@ -376,19 +388,34 @@ def handle_build(args):
 def handle_init(args):
     book = Book()
     set_book(args.folder, book)
+    write_file('', book.sidebar_md)
+    write_file('', book.index_md)
+    write_file('', book.author_md)
+    
+    # todo(Gustav): write defaults
+    # template = 'templates/template.'
+    # index = 'templates/index.'
+    # css = 'html/style.css'
+
+    for chapter in book.chapters:
+        write_file('', path_to_chapter(book, chapter))
 
 
 def handle_chapter(args):
     book = get_book(args.folder)
     href = args.href if args.href is not None else title_to_file(args.title)+'.md'
-    book.chapters.append(Chapter(args.title, href, is_header=False))
+    chapter = Chapter(args.title, href, is_header=False)
+    book.chapters.append(chapter)
+    write_file('', path_to_chapter(book, chapter))
     set_book(args.folder, book)
 
 
 def handle_header(args):
     book = get_book(args.folder)
     href = args.href if args.href is not None else title_to_file(args.title)+'.md'
-    book.chapters.append(Chapter(args.title, href, is_header=True))
+    chapter = Chapter(args.title, href, is_header=True)
+    book.chapters.append(chapter)
+    write_file('', path_to_chapter(book, chapter))
     set_book(args.folder, book)
 
 
