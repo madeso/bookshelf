@@ -12,7 +12,6 @@ import pystache
 import markdown
 
 
-# todo(Gustav): move hardcoded book properties to json input
 # todo(Gustav): replace color printing with library
 # todo(Gustav): asset/index.<extension> -> templates/<type>/index.<something>
 # todo(Gustav): figure out sass/css setup or remove
@@ -91,7 +90,6 @@ class Book:
     sidebar_md = 'book/sidebar.md'
     index_md = 'book/index.md'
     author_md = 'book/author.md'
-    
     template = 'asset/template'
     index = 'asset/index'
     css = 'html/style.css'
@@ -126,6 +124,11 @@ class Book:
         return [c.href for c in self.chapters if c.is_header]
 
     def load(self, data):
+        self.title = data['title']
+        self.copyright = data['copyright']
+        self.sidebar_md = data['sidebar_md']
+        self.index_md = data['index_md']
+        self.author_md = data['author_md']
         self.template = data['template']
         self.index = data['index']
         self.css = data['css']
@@ -143,6 +146,13 @@ class Book:
 
     def save(self):
         data = {}
+
+        #  also here
+        data['title'] = self.title
+        data['copyright'] = self.copyright
+        data['sidebar_md'] = self.sidebar_md
+        data['index_md'] = self.index_md
+        data['author_md'] = self.author_md
         data['template'] = self.template
         data['index'] = self.index
         data['css'] = self.css
