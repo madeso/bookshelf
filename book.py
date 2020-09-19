@@ -13,6 +13,7 @@ import markdown
 
 
 # todo(Gustav): replace color printing with library
+# todo(Gustav): copy source images to desination folder
 # todo(Gustav): asset/index.<extension> -> templates/<type>/index.<something>
 # todo(Gustav): figure out sass/css setup or remove
 # todo(Gustav): support epub
