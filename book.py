@@ -388,12 +388,17 @@ def check_sass(book: Book):
     if book.sass_style == '':
         return
 
-    sourcemod = os.path.getmtime(book.sass_style)
+    use_sass = file_exist(book.sass_style)
+
+    sourcemod = os.path.getmtime(book.sass_style if use_sass else template_path(book.css))
     destmod = os.path.getmtime(book.css)
     if sourcemod < destmod:
         return
 
-    subprocess.call(['sass', book.sass_style, book.css])
+    if use_sass:
+        subprocess.call(['sass', book.sass_style, book.css])
+    else:
+        write_file(read_template_file(book.css), book.css)
     print("{}✓{} style.css".format(GREEN, DEFAULT))
 
 
@@ -414,6 +419,7 @@ def handle_build(args):
     file_filter = args.filter
     stat = Stat()
 
+    check_sass(book)
     format_files(file_filter, False, book, extension, stat)
 
     valid_chapters = stat.num_chapters - stat.empty_chapters
