@@ -39,6 +39,14 @@ def read_file(path: str) -> str:
         return input_file.read()
 
 
+def template_path(path: str) -> str:
+    return os.path.join(os.path.dirname(__file__), path)
+
+
+def read_template_file(path: str) -> str:
+    return read_file(template_path(path))
+
+
 def write_file(contents: str, path: str) -> str:
     print('writing ' + path)
     directory = os.path.dirname(path)
@@ -129,7 +137,7 @@ class Book:
 
     def get_chapters(self):
         return [c.title for c in self.chapters]
-    
+
     def get_hrefs(self):
         return [c.href for c in self.chapters if c.is_header]
 
@@ -152,7 +160,7 @@ class Book:
             is_header = cc['is_header']
             c = Chapter(title, href, is_header)
             self.chapters.append(c)
-        
+
         self.update_chapters()
 
     def save(self):
@@ -220,12 +228,12 @@ def is_all_up_to_date(input_files: typing.List[str], output: str) -> bool:
     destmod = 0
     if os.path.exists(output):
         destmod = max(destmod, os.path.getmtime(output))
-    
+
     return sourcemod < destmod
 
 
 def is_up_to_date(path, output, book: Book, extension: str) -> bool:
-    return is_all_up_to_date([path, book.book_json, book.template + extension], output)
+    return is_all_up_to_date([path, book.book_json, template_path(book.template + extension)], output)
 
 
 def generate_chapter_link(book: Book, chapter_index: int, extension: str) -> str:
@@ -233,7 +241,7 @@ def generate_chapter_link(book: Book, chapter_index: int, extension: str) -> str
         return ''
     if chapter_index >= len(book.chapters):
         return ''
-        
+
     return change_extension(book.chapters[chapter_index].href, extension)
 
 
@@ -265,7 +273,7 @@ def generate_output(contents: str, template: str, book: Book, chapter: Chapter, 
     data['copyright'] = book.copyright
 
     output = pystache_render(chapter.href, template, data)
-    
+
     return output
 
 
@@ -295,7 +303,7 @@ def format_index(book: Book, skip_up_to_date: bool, extension: str):
         book.sidebar_md,
         book.index_md,
         book.author_md,
-        template_file,
+        template_path(template_file),
         book.book_json
     ]
 
@@ -303,8 +311,8 @@ def format_index(book: Book, skip_up_to_date: bool, extension: str):
         # See if the HTML is up to date
         return
 
-    
-    template = read_file(template_file)
+
+    template = read_template_file(template_file)
 
     data = {}
     data['book_title'] = book.title
@@ -350,9 +358,9 @@ def format_file(chapter: Chapter, skip_up_to_date: bool, extension: str, stat: S
     if skip_up_to_date and is_up_to_date(path, output_file, book, extension):
         # See if the HTML is up to date
         return
-        
+
     contents = read_file(path)
-    template = read_file(book.template + extension)
+    template = read_template_file(book.template + extension)
 
     # Write the output.
     output = generate_output(contents, template, book, chapter, extension)
@@ -379,7 +387,7 @@ def format_files(file_filter: typing.Optional[str], skip_up_to_date: bool, book:
 def check_sass(book: Book):
     if book.sass_style == '':
         return
-    
+
     sourcemod = os.path.getmtime(book.sass_style)
     destmod = os.path.getmtime(book.css)
     if sourcemod < destmod:
@@ -423,7 +431,7 @@ def handle_init(args):
     write_file('sidebar', book.sidebar_md)
     write_file('index', book.index_md)
     write_file('author', book.author_md)
-    
+
     # todo(Gustav): write defaults
     # template = 'templates/template.'
     # index = 'templates/index.'
