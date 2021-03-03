@@ -315,6 +315,7 @@ class ChapterData(GeneralData):
 class Page:
     def __init__(self, stat: Stat, chapter: str, source: str, target: str, is_chapter: bool, is_index: bool):
         self.source = source
+        self.href = os.path.basename(source)
         self.target = target
         self.frontmatter, self.content = read_frontmatter_file(self.source)
         self.guess = GuessedData(self.source)
@@ -322,10 +323,21 @@ class Page:
         self.is_chapter = is_chapter
         self.is_index = is_index
         self.chapter = chapter
-        # todo(Gustav): update!
+        self.next_page = None
+        self.prev_page = None
+        # todo(Gustav): fix data
         self.parent_title = ''
         self.parent_href = None
         stat.update(self.content, chapter, is_chapter)
+
+    @staticmethod
+    def post_generation(pages: typing.List['Page']):
+        last_page = None
+        for page in pages:
+            page.prev_page = last_page
+            if last_page is not None:
+                last_page.next_page = page
+            last_page = page
 
     def generate_chapter_data(self, template: str, gen: GeneratedData) -> str:
         data = {}
@@ -336,12 +348,14 @@ class Page:
 
         title, section_header = generate_section_header(not self.is_chapter, info.title, self.parent_title, self.parent_href, gen.extension)
 
-        # todo(Gustav): fix data
+        prev_page = '' if self.prev_page is None else change_extension(self.prev_page.href, gen.extension)
+        next_page = '' if self.next_page is None else change_extension(self.next_page.href, gen.extension)
+
         data['title'] = title
         data['section_header'] = section_header
         data['header'] = info.title
-        data['prev'] = 'prev'
-        data['next'] = 'next'
+        data['prev'] = prev_page
+        data['next'] = next_page
         data['book_title'] = gen.book_title
         data['copyright'] = gen.glob.copyright
 
@@ -360,9 +374,9 @@ class Page:
         # todo(Gustav): fix data
         data['book_title'] = gen.book_title
         data['copyright'] = gen.glob.copyright
-        data['toc'] = 'toc'
+        data['toc'] = 'fix data: toc'
+        data['first_page'] = '' if self.next_page is None else change_extension(self.next_page.href, gen.extension)
         data['sidebar'] = run_markdown(read_file(sidebar_file))
-        data['first_page'] = 'first_page'
         data['author'] = run_markdown(read_file(author_file))
 
         return pystache_render(self.source, template, data)
@@ -401,7 +415,7 @@ class Chapter:
         chapters = []
         if file_exist(os.path.join(source_folder, CHAPTER_INDEX)):
             chapters.append(CHAPTER_INDEX)
-        chapters = chapters + [c for c in self.chapters]
+        chapters = chapters + self.chapters
 
         for chapter in chapters:
             source = os.path.join(source_folder, chapter)
@@ -506,8 +520,13 @@ def handle_build(_):
     pages = []
     glob = book.generate_globals()
     book.generate_pages(book_folder, html, ext, stat, pages)
+    gen = GeneratedData(glob, ext, book_title='Book Title', root=book_folder)
     for page in pages:
-        page.write(templates, GeneratedData(glob, ext, book_title='Book Title', root=book_folder))
+        if page.source == os.path.join(root, CHAPTER_INDEX):
+            gen.book_title = page.general.title
+    Page.post_generation(pages)
+    for page in pages:
+        page.write(templates, gen)
 
     # generate
     stat.print_estimate()
