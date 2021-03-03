@@ -270,19 +270,23 @@ class GlobalData:
 
 
 class GeneratedData:
-    def __init__(self, glob: GlobalData, extension: str, book_title: str, root: str):
+    def __init__(self, glob: GlobalData, extension: str, book_title: str, root: str, toc: str):
         self.glob = glob
         self.extension = extension
         self.book_title = book_title
         self.root = root
+        self.toc = toc
+
 
 class GuessedData:
     def __init__(self, source: str):
         self.title = os.path.splitext(os.path.basename(source))[0]
 
+
 TOML_GENERAL_TITLE = 'title'
 TOML_INDEX_SIDEBAR = 'sidebar_file'
 TOML_INDEX_AUTHOR = 'author_file'
+
 
 class GeneralData:
     def __init__(self, frontmatter: typing.Any, guess: GuessedData):
@@ -374,7 +378,7 @@ class Page:
         # todo(Gustav): fix data
         data['book_title'] = gen.book_title
         data['copyright'] = gen.glob.copyright
-        data['toc'] = 'fix data: toc'
+        data['toc'] = gen.toc
         data['first_page'] = '' if self.next_page is None else change_extension(self.next_page.href, gen.extension)
         data['sidebar'] = run_markdown(read_file(sidebar_file))
         data['author'] = run_markdown(read_file(author_file))
@@ -384,6 +388,16 @@ class Page:
     def write(self, templates: Templates, gen: GeneratedData):
         generated = self.generate_index_data(templates.index, gen) if self.is_index else self.generate_chapter_data(templates.template, gen)
         write_file(generated, self.target)
+
+    def generate_html_list(self, extension: str, indent: str):
+        html = indent + '<li><a href="{}">{}</a>'.format(change_extension(self.href, extension), self.general.title)
+        # if len(self.children) != 0:
+        #     html += '\n' + indent + '    <ul>\n'
+        #     for c in self.children:
+        #         html += c.generate_html_list(extension, indent + '    ') + '\n'
+        #     html += indent + '    </ul>\n' + indent
+        html += '</li>'
+        return html
 
 
 class Chapter:
@@ -423,6 +437,15 @@ class Chapter:
             is_index = chapter == CHAPTER_INDEX
             is_chapter = len(self.chapters) > 0 or is_index
             pages.append(Page(stat, chapter, source, target, is_chapter, is_index))
+
+
+
+def generate_toc(pages: typing.List[Page], extension: str, index_source: str) -> str:
+    html = ''
+    for page in pages:
+        if page.source != index_source:
+            html = html + page.generate_html_list(extension, '  ')
+    return html
 
 
 class Book(Chapter):
@@ -520,9 +543,10 @@ def handle_build(_):
     pages = []
     glob = book.generate_globals()
     book.generate_pages(book_folder, html, ext, stat, pages)
-    gen = GeneratedData(glob, ext, book_title='Book Title', root=book_folder)
+    index_source = os.path.join(root, CHAPTER_INDEX)
+    gen = GeneratedData(glob, ext, book_title='Book Title', root=book_folder, toc=generate_toc(pages, ext, index_source))
     for page in pages:
-        if page.source == os.path.join(root, CHAPTER_INDEX):
+        if page.source == index_source:
             gen.book_title = page.general.title
     Page.post_generation(pages)
     for page in pages:
