@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # Converts from the source markup format to HTML for the web version.
 
+# todo(Gustav): add back nested chapters
+# todo(Gustav): add watcher (with auto refresh like hugo)
 # todo(Gustav): copy source images to desination folder
 # todo(Gustav): action to transform image to local folder
 # todo(Gustav): action to modify markdown and download image
-# todo(Gustav): add watcher
+# todo(Gustav): action to modify downloaded image, change format and make black-white and dithering
 # todo(Gustav): support epub
 
 ###################################################################################################
@@ -375,7 +377,6 @@ class Page:
         sidebar_file = os.path.join(gen.root, info.sidebar_file)
         author_file = os.path.join(gen.root, info.author_file)
 
-        # todo(Gustav): fix data
         data['book_title'] = gen.book_title
         data['copyright'] = gen.glob.copyright
         data['toc'] = gen.toc
@@ -391,6 +392,7 @@ class Page:
 
     def generate_html_list(self, extension: str, indent: str):
         html = indent + '<li><a href="{}">{}</a>'.format(change_extension(self.href, extension), self.general.title)
+        # todo(Gustav): handle children in toc
         # if len(self.children) != 0:
         #     html += '\n' + indent + '    <ul>\n'
         #     for c in self.children:
