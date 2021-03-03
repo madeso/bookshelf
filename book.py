@@ -400,6 +400,27 @@ class Page:
         return html
 
 
+def update_frontmatter(chapter_path: str, create_data):
+    frontmatter, content = read_frontmatter_file(chapter_path)
+    write_chapter = False
+    if frontmatter is None:
+        write_chapter = True
+        frontmatter = {}
+        guess = GuessedData(chapter_path)
+        chapter = create_data(frontmatter, guess)
+        chapter.generate(frontmatter)
+    if write_chapter:
+        write_frontmatter_file(chapter_path, frontmatter, content)
+
+
+def update_frontmatter_chapter(chapter_path: str):
+    update_frontmatter(chapter_path, ChapterData)
+
+
+def update_frontmatter_index(chapter_path: str):
+    update_frontmatter(chapter_path, IndexData)
+
+
 class Chapter:
     def __init__(self):
         self.chapters = []
@@ -437,6 +458,15 @@ class Chapter:
             is_index = chapter == CHAPTER_INDEX
             is_chapter = len(self.chapters) > 0 or is_index
             pages.append(Page(stat, chapter, source, target, is_chapter, is_index))
+
+    def update_frontmatters(self, source_folder: str):
+        index_file = os.path.join(source_folder, CHAPTER_INDEX)
+        if file_exist(index_file):
+            update_frontmatter_index(index_file)
+
+        for chapter in self.chapters:
+            path = os.path.join(source_folder, chapter)
+            update_frontmatter_chapter(path)
 
 
 
@@ -477,8 +507,6 @@ class Book(Chapter):
         return book
 
 
-
-
 ###################################################################################################
 ###################################################################################################
 ###################################################################################################
@@ -490,14 +518,20 @@ def handle_watch(_):
         time.sleep(0.3)
 
 
-def handle_init(_):
+def handle_init(args):
     root = os.getcwd()
     path = find_book_file(root)
     if path is not None:
-        print('Book is already defined in {}'.format(path))
+        if not args.update:
+            print('Book is already defined in {}'.format(path))
+            return
+        book = Book.load(path)
+        book_folder = os.path.dirname(path)
+        book.update_frontmatters(book_folder)
     else:
         path = book_path_in_folder(root)
         book = Book()
+        book.update_frontmatters(path)
         book.save(path)
         print('Created book!')
 
@@ -524,17 +558,7 @@ def handle_add(args):
         book.add_chapter(chapter)
         print("Adding {}".format(chapter))
 
-        frontmatter, content = read_frontmatter_file(chapter_path)
-        write_chapter = False
-        if frontmatter is None:
-            print('Missing frontmatter in {}'.format(chapter_path))
-            write_chapter = True
-            frontmatter = {}
-            guess = GuessedData(chapter_path)
-            chapter = ChapterData(frontmatter, guess)
-            chapter.generate(frontmatter)
-        if write_chapter:
-            write_frontmatter_file(chapter_path, frontmatter, content)
+        update_frontmatter_chapter(chapter_path)
 
         changed = True
 
@@ -584,6 +608,7 @@ def main():
     sub_parsers = parser.add_subparsers(dest='command_name', title='Commands', help='', metavar='<command>')
 
     sub = sub_parsers.add_parser('init', help='Create a new book')
+    sub.add_argument('--update', action='store_true')
     sub.set_defaults(func=handle_init)
 
     sub = sub_parsers.add_parser('add', help='Add a thing to a book')
