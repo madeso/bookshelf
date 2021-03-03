@@ -249,7 +249,7 @@ def generate_output(contents: str, template: str, book: Book, chapter: Chapter, 
     title_text = chapter.title
     section_header = ""
 
-    if chapter.is_header == False and chapter.parent is not None:
+    if not chapter.is_header and chapter.parent is not None:
         parent = chapter.parent
         title_text = chapter.title + " &middot; " + parent.title
         section_href = change_extension(parent.href, extension)
