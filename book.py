@@ -1,32 +1,61 @@
 #!/usr/bin/env python3
 # Converts from the source markup format to HTML for the web version.
 
+# todo(Gustav): copy source images to desination folder
+# todo(Gustav): action to transform image to local folder
+# todo(Gustav): action to modify markdown and download image
+# todo(Gustav): add watcher
+# todo(Gustav): support epub
+
+###################################################################################################
+# Imports
+
 import os
-import subprocess
 import typing
 import argparse
 import time
 import json
+# import subprocess
 
+# non-standard dependencies
 import pystache
 import markdown
+import colorama
 
 
-# todo(Gustav): replace color printing with library
-# todo(Gustav): copy source images to desination folder
-# todo(Gustav): asset/index.<extension> -> templates/<type>/index.<something>
-# todo(Gustav): figure out sass/css setup or remove
-# todo(Gustav): support epub
-# todo(Gustav): make sure watch watches all the files
-# todo(Gustav): add sample css and templates
-# todo(Gustav): create functions should add a empty markdown
+###################################################################################################
+# Global setup
+
+from colorama import Fore, Style
+colorama.init(strip=True)
 
 
-GREEN = '\033[32m'
-RED = '\033[31m'
-DEFAULT = '\033[0m'
-PINK = '\033[91m'
-YELLOW = '\033[33m'
+###################################################################################################
+# Constants
+
+# single file in book root
+BOOK_FILE = '.book.json'
+
+# a folder (or file) that is added to a book is considered a chapter
+CHAPTER_FILE = '.chapter.json'
+
+# a markdown that is automatically added to the folder first
+# index or readme? readme.md goes nice with github browsing but index.html is another standard
+CHAPTER_INDEX = 'index.md'
+
+
+###################################################################################################
+# JSON keys
+
+CHAPTER_JSON_CHAPTERS = 'chapters'
+
+BOOK_JSON_CHAPTER = 'chapter'
+
+
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
 
 
 def file_exist(file: str) -> bool:
@@ -39,16 +68,8 @@ def read_file(path: str) -> str:
         return input_file.read()
 
 
-def template_path(path: str) -> str:
-    return os.path.join(os.path.dirname(__file__), path)
-
-
-def read_template_file(path: str) -> str:
-    return read_file(template_path(path))
-
-
 def write_file(contents: str, path: str) -> str:
-    print('writing ' + path)
+    print('Writing ' + path)
     directory = os.path.dirname(path)
     os.makedirs(directory, exist_ok=True)
     with open(path, 'w', encoding='utf-8') as file_handle:
@@ -64,150 +85,6 @@ def run_markdown(contents: str):
 def change_extension(file: str, extension: str):
     base = os.path.splitext(file)[0]
     return base + "." + extension
-
-
-class Chapter:
-    def __init__(self, title: str, href: str, is_header: bool = False):
-        self.title = title
-        self.href = href
-        self.is_header = is_header
-        self.next_chapter = -1
-        self.prev_chapter = -1
-        self.children = []
-        self.parent = None
-
-    def generate_html_list(self, extension: str, indent: str):
-        html = indent + '<li><a href="{}">{}</a>'.format(change_extension(self.href, extension), self.title)
-        if len(self.children) != 0:
-            html += '\n' + indent + '    <ul>\n'
-            for c in self.children:
-                html += c.generate_html_list(extension, indent + '    ') + '\n'
-            html += indent + '    </ul>\n' + indent
-        html += '</li>'
-        return html
-
-
-class Stat:
-    num_chapters = 0
-    empty_chapters = 0
-    total_words = 0
-
-
-def get_project_file_name(folder) -> str:
-    return os.path.join(folder, 'book.json')
-
-
-class Book:
-    book_json = ''
-    chapter_folder = 'book'
-    title = 'My awesome book'
-    copyright = '2020 Gustav'
-    sidebar_md = 'book/sidebar.md'
-    index_md = 'book/index.md'
-    author_md = 'book/author.md'
-    template = 'templates/template.'
-    index = 'templates/index.'
-    css = 'html/style.css'
-    sass_style = '/style.scss'
-    chapters = [
-        Chapter("Section", 'section.md', is_header=True),
-        Chapter("Chapter", "chapter.md"),
-    ]
-    root_chapters = []
-
-    def update_chapters(self):
-        # start clean
-        self.root_chapters = []
-        for chapter in self.chapters:
-            chapter.children = []
-
-        last_root = None
-        for index, chapter in enumerate(self.chapters):
-            chapter.prev_chapter = index - 1
-            chapter.next_chapter = index + 1
-            if chapter.is_header:
-                last_root = chapter
-                self.root_chapters.append(chapter)
-            else:
-                if last_root is not None:
-                    last_root.children.append(chapter)
-                    chapter.parent = last_root
-                else:
-                    self.root_chapters.append(chapter)
-
-    def get_chapters(self):
-        return [c.title for c in self.chapters]
-
-    def get_hrefs(self):
-        return [c.href for c in self.chapters if c.is_header]
-
-    def load(self, data):
-        self.chapter_folder = data['chapter_folder']
-        self.title = data['title']
-        self.copyright = data['copyright']
-        self.sidebar_md = data['sidebar_md']
-        self.index_md = data['index_md']
-        self.author_md = data['author_md']
-        self.template = data['template']
-        self.index = data['index']
-        self.css = data['css']
-        self.sass_style = data['sass_style']
-        chapters = data['chapters']
-        self.chapters = []
-        for cc in chapters:
-            title = cc['title']
-            href = cc['href']
-            is_header = cc['is_header']
-            c = Chapter(title, href, is_header)
-            self.chapters.append(c)
-
-        self.update_chapters()
-
-    def save(self):
-        data = {}
-
-        #  also here
-        data['chapter_folder'] = self.chapter_folder
-        data['title'] = self.title
-        data['copyright'] = self.copyright
-        data['sidebar_md'] = self.sidebar_md
-        data['index_md'] = self.index_md
-        data['author_md'] = self.author_md
-        data['template'] = self.template
-        data['index'] = self.index
-        data['css'] = self.css
-        data['sass_style'] = self.sass_style
-        chapters = []
-        for c in self.chapters:
-            cc = {}
-            cc['title'] = c.title
-            cc['href'] = c.href
-            cc['is_header'] = c.is_header
-            chapters.append(cc)
-        data['chapters'] = chapters
-        return data
-
-
-def get_book(folder) -> Book:
-    file_path = get_project_file_name(folder)
-    if file_exist(file_path):
-        book = Book()
-        data = json.loads(read_file(file_path))
-        book.load(data)
-        book.book_json = file_path
-        return book
-    else:
-        book = Book()
-        book.book_json = file_path
-        return book
-
-
-def set_book(book: Book):
-    write_file(json.dumps(book.save(), indent=4), book.book_json)
-
-
-def output_path(extension, pattern):
-    return extension + "/" + pattern + "." + extension
 
 
 def pretty(text):
@@ -232,273 +109,287 @@ def is_all_up_to_date(input_files: typing.List[str], output: str) -> bool:
     return sourcemod < destmod
 
 
-def is_up_to_date(path, output, book: Book, extension: str) -> bool:
-    return is_all_up_to_date([path, book.book_json, template_path(book.template + extension)], output)
-
-
-def generate_chapter_link(book: Book, chapter_index: int, extension: str) -> str:
-    if chapter_index < 0:
-        return ''
-    if chapter_index >= len(book.chapters):
-        return ''
-
-    return change_extension(book.chapters[chapter_index].href, extension)
-
-
-def generate_output(contents: str, template: str, book: Book, chapter: Chapter, extension: str) -> str:
-    title_text = chapter.title
-    section_header = ""
-
-    if not chapter.is_header and chapter.parent is not None:
-        parent = chapter.parent
-        title_text = chapter.title + " &middot; " + parent.title
-        section_href = change_extension(parent.href, extension)
-        section_header = '<span class="section"><a href="{}">{}</a></span>'.format(section_href, parent.title)
-
-    prev_link = generate_chapter_link(book, chapter.prev_chapter, extension)
-    next_link = generate_chapter_link(book, chapter.next_chapter, extension)
-
-    body = run_markdown(contents)
-
-    # body = smartypants.smartypants(body)
-
-    data = {}
-    data['title'] = title_text
-    data['section_header'] = section_header
-    data['header'] = chapter.title
-    data['body'] = body
-    data['prev'] = prev_link
-    data['next'] = next_link
-    data['book_title'] = book.title
-    data['copyright'] = book.copyright
-
-    output = pystache_render(chapter.href, template, data)
-
-    return output
-
-
-def generate_toc_html(book: Book, extension: str) -> str:
-    html = ''
-    for c in book.root_chapters:
-        html = html + c.generate_html_list(extension, '  ')
-    return html
-
-
 def pystache_render(filename, template, data):
     renderer = pystache.renderer.Renderer(missing_tags='strict')
     try:
         return renderer.render(template, data)
     except pystache.context.KeyNotFoundError as e:
-        print(filename, e)
+        print(filename, 'ERROR:', e)
         return ''
 
+def parent_folder(folder: str) -> str:
+    return os.path.abspath(os.path.join(folder, os.pardir))
 
-def format_index(book: Book, skip_up_to_date: bool, extension: str):
-    name = os.path.splitext(os.path.basename(book.index + extension))[0]
-    output_file = output_path(extension, name)
-    template_file = book.index + extension
-
-    # todo(Gustav): include book.json for reflecting the date?
-    input_files = [
-        book.sidebar_md,
-        book.index_md,
-        book.author_md,
-        template_path(template_file),
-        book.book_json
-    ]
-
-    if skip_up_to_date and is_all_up_to_date(input_files, output_file):
-        # See if the HTML is up to date
-        return
-
-
-    template = read_template_file(template_file)
-
-    data = {}
-    data['book_title'] = book.title
-    data['copyright'] = book.copyright
-    data['toc'] = generate_toc_html(book, extension)
-    data['sidebar'] = run_markdown(read_file(book.sidebar_md))
-    data['index'] = run_markdown(read_file(book.index_md))
-    data['first_page'] = change_extension(book.chapters[0].href, extension)
-    data['author'] = run_markdown(read_file(book.author_md))
-
-    output = pystache_render(template_file, template, data)
-    write_file(output, output_file)
-
-
-def update_wordcount(stat: Stat, contents: str, chapter: Chapter, basename: str):
-    word_count = len(contents.split(None))
-    if not chapter.is_header:
-        stat.num_chapters += 1
-        if word_count < 50:
-            stat.empty_chapters += 1
-            print("    {}".format(basename))
-        elif word_count < 2000:
-            stat.empty_chapters += 1
-            print("{}-{} {} ({} words)".format(YELLOW, DEFAULT, basename, word_count))
-        else:
-            stat.total_words += word_count
-            print("{}✓{} {} ({} words)".format(GREEN, DEFAULT, basename, word_count))
-    else:
-        # Section header chapters aren't counted like regular chapters.
-        print("{}•{} {} ({} words)".format(GREEN, DEFAULT, basename, word_count))
-
-
-def path_to_chapter(book: Book, chapter: Chapter):
-    """ returns book/the_file.md """
-    return os.path.join(book.chapter_folder, chapter.href) # book/the_file.md
-
-
-def format_file(chapter: Chapter, skip_up_to_date: bool, extension: str, stat: Stat, book: Book):
-    path = path_to_chapter(book, chapter)
-    basename = os.path.splitext(chapter.href)[0] # the_file
-    output_file = output_path(extension, basename)
-
-    if skip_up_to_date and is_up_to_date(path, output_file, book, extension):
-        # See if the HTML is up to date
-        return
-
-    contents = read_file(path)
-    template = read_template_file(book.template + extension)
-
-    # Write the output.
-    output = generate_output(contents, template, book, chapter, extension)
-    write_file(output, output_file)
-
-    update_wordcount(stat, contents, chapter, basename)
-
-
-def title_to_file(title):
-    """Given a title like "Event Queue", converts it to the corresponding file
-    name like "event-queue"."""
-
-    return title.lower().replace(" ", "-").replace(",", "").replace(":", "")
-
-
-def format_files(file_filter: typing.Optional[str], skip_up_to_date: bool, book: Book, extension: str, stat: Stat):
-    '''Process each markdown file.'''
-    format_index(book, skip_up_to_date, extension)
-    for chapter in book.chapters:
-        if file_filter is None or file_filter in chapter.href:
-            format_file(chapter, skip_up_to_date, extension, stat, book)
-
-
-def check_sass(book: Book):
-    if book.sass_style == '':
-        return
-
-    use_sass = file_exist(book.sass_style)
-
-    sourcemod = os.path.getmtime(book.sass_style if use_sass else template_path(book.css))
-    destmod = os.path.getmtime(book.css)
-    if sourcemod < destmod:
-        return
-
-    if use_sass:
-        subprocess.call(['sass', book.sass_style, book.css])
-    else:
-        write_file(read_template_file(book.css), book.css)
-    print("{}✓{} style.css".format(GREEN, DEFAULT))
-
-
-def handle_watch(args):
-    extension = "html"
+def iterate_parent_folders(folder: str) -> typing.Iterable[str]:
+    f = folder
+    yield folder
     while True:
-        book = get_book(args.folder)
-        stat = Stat()
-        format_files(None, True, book, extension, stat)
-        check_sass(book)
+        child = parent_folder(f)
+        if child != f:
+            yield child
+            f = child
+        else:
+            break
+
+
+def book_path_in_folder(folder: str) -> str:
+    return os.path.join(folder, BOOK_FILE)
+
+
+def get_book_file(folder: str) -> typing.Optional[str]:
+    book = book_path_in_folder(folder)
+    if file_exist(book):
+        return book
+    return None
+
+
+def find_book_file(folder: str) -> typing.Optional[str]:
+    for f in iterate_parent_folders(folder):
+        book = get_book_file(f)
+        if book is not None:
+            return book
+    return None
+
+
+def get_template_root() -> str:
+    return os.path.join(os.path.dirname(__file__), 'templates')
+
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
+
+
+class Templates:
+    def __init__(self, folder: str, ext: str):
+        self.index = read_file(os.path.join(folder, 'index.' + ext))
+        self.template = read_file(os.path.join(folder, 'template.' + ext))
+
+
+class Stat:
+    def __init__(self):
+        self.num_chapters = 0
+        self.empty_chapters = 0
+        self.total_words = 0
+
+    def update(self, contents: str, name: str, is_header: bool):
+        word_count = len(contents.split(None))
+        if not is_header:
+            self.num_chapters += 1
+            if word_count < 50:
+                self.empty_chapters += 1
+                print("    {}".format(name))
+            elif word_count < 2000:
+                self.empty_chapters += 1
+                print("{}-{} {} ({} words)".format(Fore.YELLOW, Style.RESET_ALL, name, word_count))
+            else:
+                self.total_words += word_count
+                print("{}✓{} {} ({} words)".format(Fore.GREEN, Style.RESET_ALL, name, word_count))
+        else:
+            # Section header chapters aren't counted like regular chapters.
+            print("{}•{} {} ({} words)".format(Fore.GREEN, Style.RESET_ALL, name, word_count))
+
+    def print_estimate(self):
+        valid_chapters = self.num_chapters - self.empty_chapters
+        average_word_count = self.total_words / valid_chapters if valid_chapters > 0 else 0
+        estimated_word_count = self.total_words + (self.empty_chapters * average_word_count)
+        percent_finished = self.total_words * 100 / estimated_word_count if estimated_word_count > 0 else 0
+
+        print("{}/~{} words ({}%)".format(self.total_words, estimated_word_count, percent_finished))
+
+
+def generate_chapter_data(filename: str, content: str, template: str) -> str:
+    data = {}
+
+    data['body'] = run_markdown(content)
+
+    # todo(Gustav): fix data
+    data['title'] = filename
+    data['section_header'] = 'section_header'
+    data['header'] = filename
+    data['prev'] = 'prev'
+    data['next'] = 'next'
+    data['book_title'] = 'title'
+    data['copyright'] = 'copyright'
+
+    return pystache_render(filename, template, data)
+
+def generate_index_data(filename: str, content: str, template: str) -> str:
+    data = {}
+
+    data['index'] = run_markdown(content)
+
+    # todo(Gustav): fix data
+    data['book_title'] = filename
+    data['copyright'] = 'copyright'
+    data['toc'] = 'toc'
+    data['sidebar'] = 'sidebar'
+    data['first_page'] = 'first_page'
+    data['author'] = 'author'
+
+    return pystache_render(filename, template, data)
+
+
+class Chapter:
+    def __init__(self):
+        self.chapters = []
+
+    def add_chapter(self, chap: str):
+        self.chapters.append(chap)
+
+    def from_json(self, data):
+        self.chapters = data[CHAPTER_JSON_CHAPTERS]
+
+    def to_json(self):
+        data = {}
+        data[CHAPTER_JSON_CHAPTERS] = self.chapters
+        return data
+
+    def save(self, file_path: str):
+        write_file(json.dumps(self.to_json(), indent=4), file_path)
+
+    @staticmethod
+    def load(file_path: str) -> 'Chapter':
+        book = Chapter()
+        data = json.loads(read_file(file_path))
+        book.from_json(data)
+        return book
+
+    def build(self, source_folder: str, target_folder: str, ext: str, templates: Templates, stat: Stat):
+        chapters = []
+        if file_exist(os.path.join(source_folder, CHAPTER_INDEX)):
+            chapters.append(CHAPTER_INDEX)
+        chapters = chapters + [c for c in self.chapters]
+
+        for chapter in chapters:
+            source = os.path.join(source_folder, chapter)
+            target = os.path.join(target_folder, change_extension(chapter, ext))
+            content = read_file(source)
+            stat.update(content, chapter, len(self.chapters) > 0)
+            is_index = chapter == CHAPTER_INDEX
+            generated = generate_index_data(chapter, content, templates.index) if is_index else generate_chapter_data(chapter, content, templates.template)
+            write_file(generated, target)
+
+
+class Book(Chapter):
+    def from_json(self, data):
+        super().from_json(data[BOOK_JSON_CHAPTER])
+
+    def to_json(self):
+        data = {}
+        data[BOOK_JSON_CHAPTER] = super().to_json()
+        return data
+
+    def save(self, file_path: str):
+        write_file(json.dumps(self.to_json(), indent=4), file_path)
+
+    @staticmethod
+    def load(file_path: str) -> 'Book':
+        book = Book()
+        data = json.loads(read_file(file_path))
+        book.from_json(data)
+        return book
+
+
+
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
+
+
+def handle_watch(_):
+    while True:
+        # check files
         time.sleep(0.3)
 
 
-def handle_build(args):
-    extension = "html"
-    book = get_book(args.folder)
+def handle_init(_):
+    root = os.getcwd()
+    path = find_book_file(root)
+    if path is not None:
+        print('Book is already defined in {}'.format(path))
+    else:
+        path = book_path_in_folder(root)
+        book = Book()
+        book.save(path)
+        print('Created book!')
 
-    file_filter = args.filter
+
+def handle_add(args):
+    root = os.getcwd()
+    path = get_book_file(root)
+    if path is None:
+        print('This is not a book!')
+        return
+
+    book = Book.load(path)
+
+    changed = False
+    for chapter in args.chapters:
+        chapter_path = os.path.join(root, chapter)
+        if not file_exist(chapter_path):
+            print("File '{}' doesn't exist".format(chapter_path))
+            continue
+        book.add_chapter(chapter)
+        print("Adding {}".format(chapter))
+        changed = True
+
+    if changed:
+        book.save(path)
+
+
+def handle_build(_):
+    root = os.getcwd()
+    ext = 'html'
+
+    path = find_book_file(root)
+    if path is None:
+        print('This is not a book')
+        return
+
+    book = Book.load(path)
+    book_folder = os.path.dirname(path)
+    html = os.path.join(book_folder, 'html')
     stat = Stat()
+    templates = Templates(get_template_root(), ext)
 
-    check_sass(book)
-    format_files(file_filter, False, book, extension, stat)
+    book.build(book_folder, html, ext, templates, stat)
 
-    valid_chapters = stat.num_chapters - stat.empty_chapters
-    average_word_count = stat.total_words / valid_chapters if valid_chapters > 0 else 0
-    estimated_word_count = stat.total_words + (stat.empty_chapters * average_word_count)
-    percent_finished = stat.total_words * 100 / estimated_word_count if estimated_word_count > 0 else 0
-
-    print("{}/~{} words ({}%)".format(stat.total_words, estimated_word_count, percent_finished))
+    # generate
+    stat.print_estimate()
 
 
-def handle_init(args):
-    book = Book()
-    book.book_json = get_project_file_name(args.folder)
-    set_book(book)
-    write_file('sidebar', book.sidebar_md)
-    write_file('index', book.index_md)
-    write_file('author', book.author_md)
 
-    # todo(Gustav): write defaults
-    # template = 'templates/template.'
-    # index = 'templates/index.'
-    # css = 'html/style.css'
-
-    for chapter in book.chapters:
-        write_file('write something here', path_to_chapter(book, chapter))
-
-
-def handle_chapter(args):
-    book = get_book(args.folder)
-    href = args.href if args.href is not None else title_to_file(args.title)+'.md'
-    chapter = Chapter(args.title, href, is_header=False)
-    book.chapters.append(chapter)
-    write_file('write something here', path_to_chapter(book, chapter))
-    set_book(book)
-
-
-def handle_header(args):
-    book = get_book(args.folder)
-    href = args.href if args.href is not None else title_to_file(args.title)+'.md'
-    chapter = Chapter(args.title, href, is_header=True)
-    book.chapters.append(chapter)
-    write_file('write something here', path_to_chapter(book, chapter))
-    set_book(book)
+###################################################################################################
+###################################################################################################
+###################################################################################################
 
 
 def main():
     parser = argparse.ArgumentParser(description='Create or write a book')
     sub_parsers = parser.add_subparsers(dest='command_name', title='Commands', help='', metavar='<command>')
 
-    sub = sub_parsers.add_parser('watch', help='Watch file for changes')
-    sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
-    sub.set_defaults(func=handle_watch)
-
-    sub = sub_parsers.add_parser('build', help='Build book')
-    sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
-    sub.add_argument('--filter', help='specify a file name filter to just regenerate a subset of the files')
-    sub.set_defaults(func=handle_build)
-
-    sub = sub_parsers.add_parser('chapter', help='Add a chapter to the book')
-    sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
-    sub.add_argument('title', help='the title of the chapter')
-    sub.add_argument('--href', help='the href of the chapter', default=None)
-    sub.set_defaults(func=handle_chapter)
-
-    sub = sub_parsers.add_parser('header', help='Add a header to the book, headers are above chapters')
-    sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
-    sub.add_argument('title', help='the title of the section')
-    sub.add_argument('--href', help='the href of the chapter', default=None)
-    sub.set_defaults(func=handle_header)
-
     sub = sub_parsers.add_parser('init', help='Create a new book')
-    sub.add_argument('--folder', help='the folder where to run from', default=os.getcwd())
     sub.set_defaults(func=handle_init)
+
+    sub = sub_parsers.add_parser('add', help='Add a thing to a book')
+    sub.add_argument('chapters', nargs='+', metavar='chapter')
+    sub.set_defaults(func=handle_add)
+
+    sub = sub_parsers.add_parser('build', help='Generate html')
+    sub.set_defaults(func=handle_build)
 
     args = parser.parse_args()
     if args.command_name is not None:
         args.func(args)
     else:
         parser.print_help()
+
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
 
 
 if __name__ == "__main__":
