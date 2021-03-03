@@ -531,7 +531,8 @@ def handle_init(args):
     else:
         path = book_path_in_folder(root)
         book = Book()
-        book.update_frontmatters(path)
+        book_folder = os.path.dirname(path)
+        book.update_frontmatters(book_folder)
         book.save(path)
         print('Created book!')
 
