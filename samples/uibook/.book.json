@@ -1,7 +1,6 @@
 {
     "chapter": {
         "chapters": [
-            "chapter-10.md",
             "chapter-1.md",
             "chapter-2.md",
             "chapter-3.md",
@@ -10,7 +9,9 @@
             "chapter-6.md",
             "chapter-7.md",
             "chapter-8.md",
-            "chapter-9.md"
+            "chapter-9.md",
+            "chapter-10.md"
         ]
-    }
+    },
+    "copyright": ""
 }
