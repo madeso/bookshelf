@@ -79,7 +79,7 @@ def read_frontmatter_file(path: str) -> typing.Tuple[typing.Any, str]:
         for line in input_file:
             if not has_frontmatter:
                 s = line.strip()
-                if len(s) > FRONTMATTER_SEPERATOR_MIN_LENGTH and len(s) * FRONTMATTER_SEPERATOR_CHAR == s:
+                if len(s) >= FRONTMATTER_SEPERATOR_MIN_LENGTH and len(s) * FRONTMATTER_SEPERATOR_CHAR == s:
                     has_frontmatter = True
                 else:
                     first.append(line)
@@ -102,9 +102,9 @@ def write_frontmatter_file(path: str, frontmatter:typing.Optional[typing.Any], c
     os.makedirs(directory, exist_ok=True)
     with open(path, 'w', encoding='utf-8') as file_handle:
         if frontmatter is not None:
-            print(toml.dumps(frontmatter), file=file_handle)
+            print(toml.dumps(frontmatter).rstrip(), file=file_handle)
             print(FRONTMATTER_SEPERATOR_CHAR * FRONTMATTER_SEPERATOR_MIN_LENGTH, file=file_handle)
-        print(content, file=file_handle)
+        print(content.rstrip(), file=file_handle)
 
 
 def write_file(contents: str, path: str) -> str:
@@ -299,13 +299,13 @@ class GeneralData:
 class IndexData(GeneralData):
     def __init__(self,  frontmatter: typing.Any, guess: GuessedData):
         GeneralData.__init__(self, frontmatter, guess)
-        self.sidebar_file = 'sidebar.md'
-        self.author_file = 'author.md'
+        self.sidebar_file = get_toml(frontmatter, TOML_INDEX_SIDEBAR, 'sidebar.md')
+        self.author_file = get_toml(frontmatter, TOML_INDEX_AUTHOR, 'author.md')
 
     def generate(self, frontmatter: typing.Any):
-        super.generate(frontmatter)
-        self.sidebar_file = get_toml(frontmatter, TOML_INDEX_SIDEBAR, self.sidebar_file)
-        self.author_file = get_toml(frontmatter, TOML_INDEX_AUTHOR, self.author_file)
+        super().generate(frontmatter)
+        frontmatter[TOML_INDEX_SIDEBAR] = self.sidebar_file
+        frontmatter[TOML_INDEX_AUTHOR] = self.author_file
 
 
 class ChapterData(GeneralData):
@@ -313,7 +313,7 @@ class ChapterData(GeneralData):
         GeneralData.__init__(self, frontmatter, guess)
 
     def generate(self, frontmatter: typing.Any):
-        super.generate(frontmatter)
+        super().generate(frontmatter)
 
 
 class Page:
@@ -510,6 +510,7 @@ def handle_add(args):
         return
 
     book = Book.load(path)
+    index_source = os.path.join(root, CHAPTER_INDEX)
 
     changed = False
     for chapter in args.chapters:
@@ -517,8 +518,24 @@ def handle_add(args):
         if not file_exist(chapter_path):
             print("File '{}' doesn't exist".format(chapter_path))
             continue
+        if chapter_path == index_source:
+            print('{} evaluates to the index file, this is always added, so ignoring...'.format(chapter))
+            continue
         book.add_chapter(chapter)
         print("Adding {}".format(chapter))
+
+        frontmatter, content = read_frontmatter_file(chapter_path)
+        write_chapter = False
+        if frontmatter is None:
+            print('Missing frontmatter in {}'.format(chapter_path))
+            write_chapter = True
+            frontmatter = {}
+            guess = GuessedData(chapter_path)
+            chapter = ChapterData(frontmatter, guess)
+            chapter.generate(frontmatter)
+        if write_chapter:
+            write_frontmatter_file(chapter_path, frontmatter, content)
+
         changed = True
 
     if changed:
@@ -536,6 +553,7 @@ def handle_build(_):
 
     book = Book.load(path)
     book_folder = os.path.dirname(path)
+    index_source = os.path.join(root, CHAPTER_INDEX)
     html = os.path.join(book_folder, 'html')
     stat = Stat()
     templates = Templates(get_template_root(), ext)
@@ -543,7 +561,6 @@ def handle_build(_):
     pages = []
     glob = book.generate_globals()
     book.generate_pages(book_folder, html, ext, stat, pages)
-    index_source = os.path.join(root, CHAPTER_INDEX)
     gen = GeneratedData(glob, ext, book_title='Book Title', root=book_folder, toc=generate_toc(pages, ext, index_source))
     for page in pages:
         if page.source == index_source:
