@@ -18,6 +18,7 @@ import json
 # import subprocess
 
 # non-standard dependencies
+import toml
 import pystache
 import markdown
 import colorama
@@ -50,13 +51,15 @@ CHAPTER_INDEX = 'index.md'
 CHAPTER_JSON_CHAPTERS = 'chapters'
 
 BOOK_JSON_CHAPTER = 'chapter'
-
+BOOK_JSON_COPYRIGHT = 'copyright'
 
 
 ###################################################################################################
 ###################################################################################################
 ###################################################################################################
 
+FRONTMATTER_SEPERATOR_CHAR = '+'
+FRONTMATTER_SEPERATOR_MIN_LENGTH = 3
 
 def file_exist(file: str) -> bool:
     return os.path.isfile(file)
@@ -66,6 +69,42 @@ def read_file(path: str) -> str:
     # print('reading ' + path)
     with open(path, 'r', encoding='utf-8') as input_file:
         return input_file.read()
+
+
+def read_frontmatter_file(path: str) -> typing.Tuple[typing.Any, str]:
+    has_frontmatter = False
+    first = []
+    second = []
+    with open(path, 'r', encoding='utf-8') as input_file:
+        for line in input_file:
+            if not has_frontmatter:
+                s = line.strip()
+                if len(s) > FRONTMATTER_SEPERATOR_MIN_LENGTH and len(s) * FRONTMATTER_SEPERATOR_CHAR == s:
+                    has_frontmatter = True
+                else:
+                    first.append(line)
+            else:
+                second.append(line)
+        if has_frontmatter:
+            frontmatter = {}
+            try:
+                frontmatter = toml.loads(''.join(first))
+            except toml.decoder.TomlDecodeError as e:
+                print(path, e)
+            return (frontmatter, ''.join(second))
+        else:
+            return (None, ''.join(first))
+
+
+def write_frontmatter_file(path: str, frontmatter:typing.Optional[typing.Any], content:str):
+    print('Writing ' + path)
+    directory = os.path.dirname(path)
+    os.makedirs(directory, exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as file_handle:
+        if frontmatter is not None:
+            print(toml.dumps(frontmatter), file=file_handle)
+            print(FRONTMATTER_SEPERATOR_CHAR * FRONTMATTER_SEPERATOR_MIN_LENGTH, file=file_handle)
+        print(content, file=file_handle)
 
 
 def write_file(contents: str, path: str) -> str:
@@ -155,6 +194,33 @@ def get_template_root() -> str:
     return os.path.join(os.path.dirname(__file__), 'templates')
 
 
+def get_json(json_data: typing.Any, key: str, missing: str) -> str:
+    if key in json_data:
+        return json_data[key]
+    else:
+        return missing
+
+def get_toml(toml_data: typing.Any, key: str, missing: str) -> str:
+    if toml_data is None:
+        return missing
+    if key in toml_data:
+        return toml_data[key]
+    else:
+        return missing
+
+###################################################################################################
+
+def generate_section_header(chapter_is_header: bool, chapter_title: str, parent_title, parent_href: typing.Optional[str], extension: str) -> typing.Tuple[str, str]:
+    title_text = chapter_title
+    section_header = ""
+
+    if not chapter_is_header and parent_href is not None:
+        title_text = chapter_title + " &middot; " + parent_title
+        section_href = change_extension(parent_href, extension)
+        section_header = '<span class="section"><a href="{}">{}</a></span>'.format(section_href, parent_title)
+
+    return (title_text, section_header)
+
 ###################################################################################################
 ###################################################################################################
 ###################################################################################################
@@ -172,9 +238,9 @@ class Stat:
         self.empty_chapters = 0
         self.total_words = 0
 
-    def update(self, contents: str, name: str, is_header: bool):
+    def update(self, contents: str, name: str, is_chapter: bool):
         word_count = len(contents.split(None))
-        if not is_header:
+        if is_chapter:
             self.num_chapters += 1
             if word_count < 50:
                 self.empty_chapters += 1
@@ -198,36 +264,112 @@ class Stat:
         print("{}/~{} words ({}%)".format(self.total_words, estimated_word_count, percent_finished))
 
 
-def generate_chapter_data(filename: str, content: str, template: str) -> str:
-    data = {}
+class GlobalData:
+    def __init__(self, the_copyright: str):
+        self.copyright = the_copyright
 
-    data['body'] = run_markdown(content)
 
-    # todo(Gustav): fix data
-    data['title'] = filename
-    data['section_header'] = 'section_header'
-    data['header'] = filename
-    data['prev'] = 'prev'
-    data['next'] = 'next'
-    data['book_title'] = 'title'
-    data['copyright'] = 'copyright'
+class GeneratedData:
+    def __init__(self, glob: GlobalData, extension: str, book_title: str, root: str):
+        self.glob = glob
+        self.extension = extension
+        self.book_title = book_title
+        self.root = root
 
-    return pystache_render(filename, template, data)
+class GuessedData:
+    def __init__(self, source: str):
+        self.title = os.path.splitext(os.path.basename(source))[0]
 
-def generate_index_data(filename: str, content: str, template: str) -> str:
-    data = {}
+TOML_GENERAL_TITLE = 'title'
+TOML_INDEX_SIDEBAR = 'sidebar_file'
+TOML_INDEX_AUTHOR = 'author_file'
 
-    data['index'] = run_markdown(content)
+class GeneralData:
+    def __init__(self, frontmatter: typing.Any, guess: GuessedData):
+        self.title = get_toml(frontmatter, TOML_GENERAL_TITLE, guess.title)
 
-    # todo(Gustav): fix data
-    data['book_title'] = filename
-    data['copyright'] = 'copyright'
-    data['toc'] = 'toc'
-    data['sidebar'] = 'sidebar'
-    data['first_page'] = 'first_page'
-    data['author'] = 'author'
+    def generate(self, frontmatter: typing.Any):
+        frontmatter[TOML_GENERAL_TITLE] = self.title
 
-    return pystache_render(filename, template, data)
+
+class IndexData(GeneralData):
+    def __init__(self,  frontmatter: typing.Any, guess: GuessedData):
+        GeneralData.__init__(self, frontmatter, guess)
+        self.sidebar_file = 'sidebar.md'
+        self.author_file = 'author.md'
+
+    def generate(self, frontmatter: typing.Any):
+        super.generate(frontmatter)
+        self.sidebar_file = get_toml(frontmatter, TOML_INDEX_SIDEBAR, self.sidebar_file)
+        self.author_file = get_toml(frontmatter, TOML_INDEX_AUTHOR, self.author_file)
+
+
+class ChapterData(GeneralData):
+    def __init__(self,  frontmatter: typing.Any, guess: GuessedData):
+        GeneralData.__init__(self, frontmatter, guess)
+
+    def generate(self, frontmatter: typing.Any):
+        super.generate(frontmatter)
+
+
+class Page:
+    def __init__(self, stat: Stat, chapter: str, source: str, target: str, is_chapter: bool, is_index: bool):
+        self.source = source
+        self.target = target
+        self.frontmatter, self.content = read_frontmatter_file(self.source)
+        self.guess = GuessedData(self.source)
+        self.general = GeneralData(self.frontmatter, self.guess)
+        self.is_chapter = is_chapter
+        self.is_index = is_index
+        self.chapter = chapter
+        # todo(Gustav): update!
+        self.parent_title = ''
+        self.parent_href = None
+        stat.update(self.content, chapter, is_chapter)
+
+    def generate_chapter_data(self, template: str, gen: GeneratedData) -> str:
+        data = {}
+
+        info = ChapterData(self.frontmatter, self.guess)
+
+        data['body'] = run_markdown(self.content)
+
+        title, section_header = generate_section_header(not self.is_chapter, info.title, self.parent_title, self.parent_href, gen.extension)
+
+        # todo(Gustav): fix data
+        data['title'] = title
+        data['section_header'] = section_header
+        data['header'] = info.title
+        data['prev'] = 'prev'
+        data['next'] = 'next'
+        data['book_title'] = gen.book_title
+        data['copyright'] = gen.glob.copyright
+
+        return pystache_render(self.source, template, data)
+
+    def generate_index_data(self, template: str, gen: GeneratedData) -> str:
+        data = {}
+
+        info = IndexData(self.frontmatter, self.guess)
+
+        data['index'] = run_markdown(self.content)
+
+        sidebar_file = os.path.join(gen.root, info.sidebar_file)
+        author_file = os.path.join(gen.root, info.author_file)
+
+        # todo(Gustav): fix data
+        data['book_title'] = gen.book_title
+        data['copyright'] = gen.glob.copyright
+        data['toc'] = 'toc'
+        data['sidebar'] = run_markdown(read_file(sidebar_file))
+        data['first_page'] = 'first_page'
+        data['author'] = run_markdown(read_file(author_file))
+
+        return pystache_render(self.source, template, data)
+
+    def write(self, templates: Templates, gen: GeneratedData):
+        generated = self.generate_index_data(templates.index, gen) if self.is_index else self.generate_chapter_data(templates.template, gen)
+        write_file(generated, self.target)
 
 
 class Chapter:
@@ -255,7 +397,7 @@ class Chapter:
         book.from_json(data)
         return book
 
-    def build(self, source_folder: str, target_folder: str, ext: str, templates: Templates, stat: Stat):
+    def generate_pages(self, source_folder: str, target_folder: str, ext: str, stat: Stat, pages: typing.List[Page]):
         chapters = []
         if file_exist(os.path.join(source_folder, CHAPTER_INDEX)):
             chapters.append(CHAPTER_INDEX)
@@ -264,21 +406,28 @@ class Chapter:
         for chapter in chapters:
             source = os.path.join(source_folder, chapter)
             target = os.path.join(target_folder, change_extension(chapter, ext))
-            content = read_file(source)
-            stat.update(content, chapter, len(self.chapters) > 0)
             is_index = chapter == CHAPTER_INDEX
-            generated = generate_index_data(chapter, content, templates.index) if is_index else generate_chapter_data(chapter, content, templates.template)
-            write_file(generated, target)
+            is_chapter = len(self.chapters) > 0 or is_index
+            pages.append(Page(stat, chapter, source, target, is_chapter, is_index))
 
 
 class Book(Chapter):
+    def __init__(self):
+        Chapter.__init__(self)
+        self.the_copyright = ''
+
     def from_json(self, data):
         super().from_json(data[BOOK_JSON_CHAPTER])
+        self.the_copyright = get_json(data, BOOK_JSON_COPYRIGHT, "")
 
     def to_json(self):
         data = {}
         data[BOOK_JSON_CHAPTER] = super().to_json()
+        data[BOOK_JSON_COPYRIGHT] = self.the_copyright
         return data
+
+    def generate_globals(self) -> GlobalData:
+        return GlobalData(self.the_copyright)
 
     def save(self, file_path: str):
         write_file(json.dumps(self.to_json(), indent=4), file_path)
@@ -354,7 +503,11 @@ def handle_build(_):
     stat = Stat()
     templates = Templates(get_template_root(), ext)
 
-    book.build(book_folder, html, ext, templates, stat)
+    pages = []
+    glob = book.generate_globals()
+    book.generate_pages(book_folder, html, ext, stat, pages)
+    for page in pages:
+        page.write(templates, GeneratedData(glob, ext, book_title='Book Title', root=book_folder))
 
     # generate
     stat.print_estimate()
