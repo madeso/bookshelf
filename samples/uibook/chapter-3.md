@@ -1,10 +1,12 @@
+title = "Chapter 3: Choices"
++++
 When you go into a restaurant and you see a sign that says "No Dogs Allowed," you might think that sign is purely proscriptive: Mr. Restaurant doesn't like dogs around, so when he built the restaurant he put up that sign.
 
 If that was *all* that was going on, there would also be a "No Snakes" sign; after all, nobody likes snakes. And a "No Elephants" sign, because they break the chairs when they sit down.
 
 The *real* reason that sign is there is historical: it is a historical marker that indicates that people used to try to bring their dogs into the restaurant.
 
-Most prohibitive signs are there because the proprietors of an establishment were sick and tired of people doing X, so they made a sign asking them to please *not*. If you go into one of those fifty year old ma-and-pa diners, like the Yankee Doodle in New Haven, the walls are *covered* with signs saying things like "Please don't put your knapsack on the counter," more anthropological evidence that people used to put their knapsacks on the counter a lot. By the age of the sign you can figure out when knapsacks were popular among local students 
+Most prohibitive signs are there because the proprietors of an establishment were sick and tired of people doing X, so they made a sign asking them to please *not*. If you go into one of those fifty year old ma-and-pa diners, like the Yankee Doodle in New Haven, the walls are *covered* with signs saying things like "Please don't put your knapsack on the counter," more anthropological evidence that people used to put their knapsacks on the counter a lot. By the age of the sign you can figure out when knapsacks were popular among local students
 
 Sometimes they're harder to figure out. "Please do not bring glass bottles into the park" must mean that somebody cut themselves stepping on broken glass while walking barefoot through the grass once, and it's a good bet they sued the city.
 
@@ -16,7 +18,7 @@ It doesn't even have to be a debate between two people: it can be an internal di
 
 The first problem with this dialog is that it's distracting. You are trying to find help in the help file. You do not, at that particular moment, give a hoot whether the database is small, big, customized, or chocolate-covered. In the meanwhile, this wicked, wicked dialog is giving you little pedantic lectures that it must create a list (or database). There are about three paragraphs there, most of which are completely confusing. There's the painfully awkward phrase "your help file(s)". You see, you may have *one or more* files. As if you  **cared ** at this point that there could be more than one. As if it made the slightest amount of difference. But the programmer who worked on that dialog was obviously distressed beyond belief at the possibility that there might be more than one help file(s) and it would be incorrect to say help file, now, wouldn't it?
 
-Don't even get me started about how most people who want help are not the kinds of people who understand these kinds of arcana. Or that even advanced users, programmers with PhDs in Computer Science who know *all about* full text indexes, would not be able to figure out what they are really being asked to choose from  
+Don't even get me started about how most people who want help are not the kinds of people who understand these kinds of arcana. Or that even advanced users, programmers with PhDs in Computer Science who know *all about* full text indexes, would not be able to figure out what they are really being asked to choose from
 
 To add insult to injury, this isn't even a dialog... it's a *wizard* (the second page of which just says something like "thank you for submitting yourself to this needless waste of your time," to paraphrase). And it's pretty obvious that the designers had *some* idea as to which choice is best; after all, they've gone to the trouble of recommending one of the choices.
 
@@ -45,7 +47,7 @@ The trouble was, they never got around to disbanding the toolbar team, who didn'
 
 How many times have you seen *that*? And once you've done this by mistake, it's not clear what you did or how to fix it. So here we have an option (moving the menu bar) that nobody wants (ok, maybe 0.1% of all humans want it) but which gets in the way for almost everybody.
 
-One day a friend called me up. She was having trouble sending email. Half the screen was grey, she said 
+One day a friend called me up. She was having trouble sending email. Half the screen was grey, she said
 
 Half the screen was grey?
 
@@ -62,4 +64,3 @@ Most advanced users use several computers regularly; they upgrade their computer
  **Every time you provide an option, you're asking the user to make a decision. ** That means they will have to think about something and decide about it. It's not necessarily a *bad* thing, but, in general, you should always try to minimize the number of decisions that people have to make.
 
 This doesn't mean eliminate *all* choice. There are enough choices that users will have to make anyway: the way their document will look, the way their web site will behave, or anything else that is integral to the work that the user is doing. In these areas, go crazy:  it's great to give people choices: by all means, the more the merrier. And there's another category of choice that people like: the ability to change the visual look of things, without really changing the behavior. Everybody loves WinAmp skins; everybody sets their desktop background to a picture. Since the choice affects the visual look without affecting the way anything functions, and since users are completely free to ignore the choice and get their work done anyway, this is a good use of options.
-

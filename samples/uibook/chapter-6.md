@@ -1,3 +1,5 @@
+title = "Chapter 6: Designing for People Who Have Better Things To Do With Their Lives"
++++
 When you design user interfaces, it's a good idea to keep two principles in mind:
 
 

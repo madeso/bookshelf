@@ -1,3 +1,5 @@
+title = "Chapter 10: Conclusion"
++++
  **To summarize **, designing good software takes about six steps:
 
 1. Invent some users

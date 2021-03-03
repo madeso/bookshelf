@@ -1,3 +1,7 @@
+title = "User Interface Design For Programmers"
+sidebar_file = "sidebar.md"
+author_file = "author.md"
++++
 Most programmers' fear of user interface (UI) programming comes from their fear of doing UI design. They think that UI design is like graphic design―the mysterious process by which creative, latte-drinking, all-black-wearing people produce cool-looking, artistic pieces. Most programmers see themselves as analytic, logical thinkers instead―strong at reasoning, weak on artistic judgment, and incapable of doing UI design.
 
 In this brilliantly readable book, author Joel Spolsky proposes simple, logical rules that can be applied without any artistic talent to improve any user interface, from traditional GUI applications to websites to consumer electronics. Spolsky's primary axiom, the importance of bringing the program model in line with the user model, is both rational and simple.

@@ -1,10 +1,12 @@
+title = "Chapter 4: Affordances and Metaphors"
++++
 Developing a user interface where the program model matches the user model is not easy. Sometimes, your users might not *have* a concrete expectation of how the program works and what it's supposed to do. In these cases, you are going to have to find ways to give the user clues about how something works. With graphical interfaces, a common way to solve this problem is with *metaphors*. But not all metaphors are created equal, and it's important to understand *why* metaphors work so you know if you've got a good one.
 
 The most famous metaphor is the "desktop metaphor" used in Windows and the Macintosh. You have these little folders with little files in them, which you can drag around. You can drag a file from one folder to another to move it. To the extent that this metaphor works, it's because the little pictures of folders actually remind people of folders, which makes them realize that they can put documents into them.
 
-Here's a screenshot from Kai's Photo Soap. Can you guess how to zoom in?  
+Here's a screenshot from Kai's Photo Soap. Can you guess how to zoom in?
 
-![image](https://i2.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Kai_Is_Cool.jpg) 
+![image](https://i2.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Kai_Is_Cool.jpg)
 
 It's not very hard. The magnifying glass is a real world metaphor. People know what they are supposed to do. And there's no fear that the zoom operation is actually changing the size of the underlying image, since that's not what magnifying glasses do.
 
@@ -16,7 +18,7 @@ Word has two tiny magnifying glasses in their interface, but one of them is on t
 
 ![image](https://i2.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/My_Briefcase.gif)A metaphor, badly chosen, is worse than no metaphor at all. Remember the briefcase from Windows 95? This cute little icon occupied a square inch or so on everybody's desktop for a few years until Microsoft realized that nobody wanted one. And nobody wanted one, because it was a broken metaphor. It was supposed to be a "briefcase", where you put files to take home. But when you took the files home, you still had to put them on a floppy disk. So, do you put them in the briefcase or on a floppy disk? I'm not sure. I don't understand the briefcase. I could never get it to work.
 
-###  **Affordances ** 
+###  **Affordances **
 Well-designed objects make it clear how they work just by looking at them. Some doors have big metal plates at arm-level. The only thing you can do to a metal plate is push it. In the words of Donald Norman, the plate *affords* pushing. Other doors have big, rounded handles that just make you want to *pull* them. They even imply how they want you to place your hand on the handle. The handle *affords* pulling. It makes you *want* to pull it.
 
 Other objects aren't designed so well and you can't tell what you're supposed to do. The quintessential example is the CD jewel case, which requires you to place your thumbs *just so* and pull in a certain direction. Nothing about the design of the box would indicate how you're supposed to open it. If you don't know the trick, it's very frustrating, because the box just won't open.
@@ -25,7 +27,7 @@ The best way to create an affordance is to echo the shape of the human hand in "
 
 ![image](https://i1.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Kodak_DC290_2.jpg)![image](https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Kodak_DC290.jpg)
 
-On the front, you can see a big rubber grip which just looks like your right fingers fit there. Even smarter, on the back, in the lower left corner, you can see an indent which looks uncannily like a thumbprint. When you put your left thumb there, your left index finger curls snugly on the front of the camera, between the lens and another rubber nubbin. It provides a kind of comforting feeling you haven't felt since you sucked your thumb (and curled your index finger around your nose) 
+On the front, you can see a big rubber grip which just looks like your right fingers fit there. Even smarter, on the back, in the lower left corner, you can see an indent which looks uncannily like a thumbprint. When you put your left thumb there, your left index finger curls snugly on the front of the camera, between the lens and another rubber nubbin. It provides a kind of comforting feeling you haven't felt since you sucked your thumb (and curled your index finger around your nose)
 
 The Kodak engineers are just trying to persuade you to hold the camera with both hands, in a position which ensures that the camera will be more stable and even keeps stray fingers from blocking the lens by mistake. All this rubber is not functional, its sole purpose is to encourage you to hold the camera correctly.
 
@@ -41,7 +43,7 @@ Finally, one of the best examples of affordances is the famous "tabbed dialog". 
 
 ![image](https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Old_Control_Panel.gif)
 
-The idea was that you choose one of the icons from the (scrolling) list on the left. As you click on the icon, the right side of the screen changes. For some reason, this type of indirection was incredibly logical to the programmers who designed it, but many users didn't understand it. Among other things, people rarely figured out how to scroll the list to get more than the first 4 control panels. But more critically, most people just didn't understand that there was a connection between the icons and the dialog. The icons actually look like they are one of the choices. 
+The idea was that you choose one of the icons from the (scrolling) list on the left. As you click on the icon, the right side of the screen changes. For some reason, this type of indirection was incredibly logical to the programmers who designed it, but many users didn't understand it. Among other things, people rarely figured out how to scroll the list to get more than the first 4 control panels. But more critically, most people just didn't understand that there was a connection between the icons and the dialog. The icons actually look like they are one of the choices.
 
 Starting in about 1992, these interfaces started to disappear, to be replaced with a new invention called tabbed dialogs:
 
