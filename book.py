@@ -361,6 +361,7 @@ class Page:
 
     @staticmethod
     def post_generation(pages: typing.List['Page']):
+        # todo(Gustav): do not add previous link for first chapter to link back to index.
         last_page = None
         for page in pages:
             page.prev_page = last_page
