@@ -634,7 +634,7 @@ def handle_build(_):
 
     book = Book.load(path)
     book_folder = os.path.dirname(path)
-    index_source = os.path.join(root, CHAPTER_INDEX)
+    index_source = os.path.join(book_folder, CHAPTER_INDEX)
     html = os.path.join(book_folder, 'html')
     index_target = change_extension(os.path.join(html, CHAPTER_INDEX), ext)
     stat = Stat()
