@@ -192,8 +192,12 @@ def find_book_file(folder: str) -> typing.Optional[str]:
     return None
 
 
+def get_source_root():
+    return os.path.dirname(__file__)
+
+
 def get_template_root() -> str:
-    return os.path.join(os.path.dirname(__file__), 'templates')
+    return os.path.join(get_source_root(), 'templates')
 
 
 def get_json(json_data: typing.Any, key: str, missing: str) -> str:
@@ -209,6 +213,15 @@ def get_toml(toml_data: typing.Any, key: str, missing: str) -> str:
         return toml_data[key]
     else:
         return missing
+
+def copy_file_to_dist(folder, name):
+    source = os.path.join(get_template_root(), name)
+    dest = os.path.join(folder, name)
+    content = read_file(source)
+    write_file(content, dest)
+
+def copy_default_html_files(html: str):
+    copy_file_to_dist(html, 'style.css')
 
 ###################################################################################################
 
@@ -594,6 +607,8 @@ def handle_build(_):
         if page.source == index_source:
             gen.book_title = page.general.title
     Page.post_generation(pages)
+
+    copy_default_html_files(html)
     for page in pages:
         page.write(templates, gen)
 
