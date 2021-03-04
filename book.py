@@ -581,11 +581,26 @@ def handle_init(args):
 def handle_add(args):
     root = os.getcwd()
     path = get_book_file(root)
+    book = None
     if path is None:
-        print('This is not a book!')
-        return
+        p = os.path.join(root, CHAPTER_FILE)
+        if find_book_file(root) is not None:
+            if file_exist(p):
+                path = p
+                book = Chapter.load(path)
+            else:
+                print('Missing {}'.format(p))
+                print('This is not a chapter folder!')
+                return
+        else:
+            print('This is not a book!')
+            return
+    else:
+        book = Book.load(path)
 
-    book = Book.load(path)
+    if book is None:
+        print('BUG: Book is None')
+        return
     index_source = os.path.join(root, CHAPTER_INDEX)
 
     changed = False
