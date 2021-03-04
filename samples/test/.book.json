@@ -2,7 +2,8 @@
     "chapter": {
         "chapters": [
             "chapter1.md",
-            "chapter2.md"
+            "chapter2.md",
+            "section"
         ]
     },
     "copyright": "lipsum.com"
