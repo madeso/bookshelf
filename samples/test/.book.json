@@ -1,6 +1,9 @@
 {
     "chapter": {
-        "chapters": []
+        "chapters": [
+            "chapter1.md",
+            "chapter2.md"
+        ]
     },
     "copyright": "lipsum.com"
 }
