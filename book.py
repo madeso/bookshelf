@@ -66,6 +66,9 @@ FRONTMATTER_SEPERATOR_MIN_LENGTH = 3
 def file_exist(file: str) -> bool:
     return os.path.isfile(file)
 
+def folder_exist(file: str) -> bool:
+    return os.path.isdir(file)
+
 
 def read_file(path: str) -> str:
     # print('reading ' + path)
@@ -566,18 +569,27 @@ def handle_add(args):
     changed = False
     for chapter in args.chapters:
         chapter_path = os.path.join(root, chapter)
-        if not file_exist(chapter_path):
+        if file_exist(chapter_path):
+            if chapter_path == index_source:
+                print('{} evaluates to the index file, this is always added, so ignoring...'.format(chapter))
+                continue
+            book.add_chapter(chapter)
+            print("Adding {}".format(chapter))
+
+            update_frontmatter_chapter(chapter_path)
+
+            changed = True
+        elif folder_exist(chapter_path):
+            print("Adding section {}".format(chapter))
+            section_path = os.path.join(chapter_path, CHAPTER_INDEX)
+            if file_exist(section_path):
+                update_frontmatter_chapter(section_path)
+                book.add_chapter(chapter)
+                changed = True
+            else:
+                print("Missing section file: {}".format(section_path))
+        else:
             print("File '{}' doesn't exist".format(chapter_path))
-            continue
-        if chapter_path == index_source:
-            print('{} evaluates to the index file, this is always added, so ignoring...'.format(chapter))
-            continue
-        book.add_chapter(chapter)
-        print("Adding {}".format(chapter))
-
-        update_frontmatter_chapter(chapter_path)
-
-        changed = True
 
     if changed:
         book.save(path)
