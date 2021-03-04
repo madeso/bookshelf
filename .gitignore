@@ -1,7 +1,6 @@
 .vscode/
-book.json
 old.book.py
 html/
 
 # temporary
-book/
+samples/clrbook

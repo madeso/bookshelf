@@ -268,6 +268,7 @@ class Stat:
 
 class GlobalData:
     def __init__(self, the_copyright: str):
+        # todo(Gustav): add support to write markdown in copyright (or just a footer)
         self.copyright = the_copyright
 
 
