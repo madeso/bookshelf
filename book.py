@@ -217,14 +217,13 @@ def get_toml(toml_data: typing.Any, key: str, missing: str) -> str:
     else:
         return missing
 
-def copy_file_to_dist(folder, name):
+def copy_file_to_dist(dest, name):
     source = os.path.join(get_template_root(), name)
-    dest = os.path.join(folder, name)
     content = read_file(source)
     write_file(content, dest)
 
-def copy_default_html_files(html: str):
-    copy_file_to_dist(html, 'style.css')
+def copy_default_html_files(style_css: str):
+    copy_file_to_dist(style_css, 'style.css')
 
 
 def make_relative(src: str, dst: str) -> str:
@@ -295,12 +294,13 @@ class GlobalData:
 
 
 class GeneratedData:
-    def __init__(self, glob: GlobalData, extension: str, book_title: str, root: str, toc: str):
+    def __init__(self, glob: GlobalData, extension: str, book_title: str, root: str, toc: str, style_css: str):
         self.glob = glob
         self.extension = extension
         self.book_title = book_title
         self.root = root
         self.toc = toc
+        self.style_css = style_css
 
 
 class GuessedData:
@@ -384,6 +384,7 @@ class Page:
         data['header'] = info.title
         data['prev'] = prev_page
         data['next'] = next_page
+        data['style_css'] = make_relative(self.target, gen.style_css)
         data['book_title'] = gen.book_title
         data['copyright'] = gen.glob.copyright
 
@@ -401,6 +402,7 @@ class Page:
 
         data['book_title'] = gen.book_title
         data['copyright'] = gen.glob.copyright
+        data['style_css'] = make_relative(self.target, gen.style_css)
         data['toc'] = gen.toc
         data['first_page'] = '' if self.next_page is None else make_relative(self.target, self.next_page.target)
         data['sidebar'] = run_markdown(read_file(sidebar_file))
@@ -637,13 +639,13 @@ def handle_build(_):
     pages = []
     glob = book.generate_globals()
     book.generate_pages(book_folder, html, ext, stat, pages)
-    gen = GeneratedData(glob, ext, book_title='Book Title', root=book_folder, toc=generate_toc(pages, ext, index_source, index_target))
+    gen = GeneratedData(glob, ext, book_title='Book Title', root=book_folder, toc=generate_toc(pages, ext, index_source, index_target), style_css=os.path.join(html, 'style.css'))
     for page in pages:
         if page.source == index_source:
             gen.book_title = page.general.title
     Page.post_generation(pages)
 
-    copy_default_html_files(html)
+    copy_default_html_files(gen.style_css)
     for page in pages:
         page.write(templates, gen)
 
