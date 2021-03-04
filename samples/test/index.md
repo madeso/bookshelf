@@ -1,4 +1,4 @@
-title = "Lorem Ipsum"
+title = "Book. Lorem Ipsum"
 sidebar_file = "sidebar.md"
 author_file = "author.md"
 +++
