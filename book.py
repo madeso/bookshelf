@@ -478,12 +478,14 @@ class Chapter:
             chapters.append(CHAPTER_INDEX)
         chapters = chapters + self.chapters
 
+        book_index_file = os.path.join(os.path.dirname(find_book_file(source_folder)), CHAPTER_INDEX)
+
         for chapter in chapters:
             source = os.path.join(source_folder, chapter)
             target = os.path.join(target_folder, change_extension(chapter, ext) if file_exist(source) else chapter)
             if file_exist(source):
-                is_index = chapter == CHAPTER_INDEX
-                is_chapter = len(self.chapters) > 0 or is_index
+                is_index = source == book_index_file
+                is_chapter = chapter == CHAPTER_INDEX
                 pages.append(Page(stat, chapter, source, target, is_chapter, is_index))
             elif folder_exist(source):
                 section_file = os.path.join(source, CHAPTER_FILE)
