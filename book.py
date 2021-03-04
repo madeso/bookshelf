@@ -226,6 +226,12 @@ def copy_file_to_dist(folder, name):
 def copy_default_html_files(html: str):
     copy_file_to_dist(html, 'style.css')
 
+
+def make_relative(src: str, dst: str) -> str:
+    source_folder = os.path.dirname(src)
+    rel = os.path.relpath(dst, source_folder)
+    return rel
+
 ###################################################################################################
 
 def generate_section_header(chapter_is_header: bool, chapter_title: str, parent_title, parent_href: typing.Optional[str], extension: str) -> typing.Tuple[str, str]:
@@ -338,7 +344,6 @@ class ChapterData(GeneralData):
 class Page:
     def __init__(self, stat: Stat, chapter: str, source: str, target: str, is_chapter: bool, is_index: bool):
         self.source = source
-        self.href = os.path.basename(source)
         self.target = target
         self.frontmatter, self.content = read_frontmatter_file(self.source)
         self.guess = GuessedData(self.source)
@@ -371,8 +376,8 @@ class Page:
 
         title, section_header = generate_section_header(not self.is_chapter, info.title, self.parent_title, self.parent_href, gen.extension)
 
-        prev_page = '' if self.prev_page is None else change_extension(self.prev_page.href, gen.extension)
-        next_page = '' if self.next_page is None else change_extension(self.next_page.href, gen.extension)
+        prev_page = '' if self.prev_page is None else make_relative(self.target, self.prev_page.target)
+        next_page = '' if self.next_page is None else make_relative(self.target, self.next_page.target)
 
         data['title'] = title
         data['section_header'] = section_header
@@ -397,7 +402,7 @@ class Page:
         data['book_title'] = gen.book_title
         data['copyright'] = gen.glob.copyright
         data['toc'] = gen.toc
-        data['first_page'] = '' if self.next_page is None else change_extension(self.next_page.href, gen.extension)
+        data['first_page'] = '' if self.next_page is None else make_relative(self.target, self.next_page.target)
         data['sidebar'] = run_markdown(read_file(sidebar_file))
         data['author'] = run_markdown(read_file(author_file))
 
@@ -407,8 +412,8 @@ class Page:
         generated = self.generate_index_data(templates.index, gen) if self.is_index else self.generate_chapter_data(templates.template, gen)
         write_file(generated, self.target)
 
-    def generate_html_list(self, extension: str, indent: str):
-        html = indent + '<li><a href="{}">{}</a>'.format(change_extension(self.href, extension), self.general.title)
+    def generate_html_list(self, _extension: str, indent: str, file: str):
+        html = indent + '<li><a href="{}">{}</a>'.format(make_relative(file, self.target), self.general.title)
         # todo(Gustav): handle children in toc
         # if len(self.children) != 0:
         #     html += '\n' + indent + '    <ul>\n'
@@ -473,10 +478,21 @@ class Chapter:
 
         for chapter in chapters:
             source = os.path.join(source_folder, chapter)
-            target = os.path.join(target_folder, change_extension(chapter, ext))
-            is_index = chapter == CHAPTER_INDEX
-            is_chapter = len(self.chapters) > 0 or is_index
-            pages.append(Page(stat, chapter, source, target, is_chapter, is_index))
+            target = os.path.join(target_folder, change_extension(chapter, ext) if file_exist(source) else chapter)
+            if file_exist(source):
+                is_index = chapter == CHAPTER_INDEX
+                is_chapter = len(self.chapters) > 0 or is_index
+                pages.append(Page(stat, chapter, source, target, is_chapter, is_index))
+            elif folder_exist(source):
+                section_file = os.path.join(source, CHAPTER_FILE)
+                if file_exist(section_file):
+                    section = Chapter.load(section_file)
+                    section.generate_pages(source, target, ext, stat, pages)
+                else:
+                    print('ERROR: missing chapter file {}'.format(section_file))
+            else:
+                print('Neither file nor folder: {}'.format(source))
+
 
     def update_frontmatters(self, source_folder: str):
         index_file = os.path.join(source_folder, CHAPTER_INDEX)
@@ -489,11 +505,11 @@ class Chapter:
 
 
 
-def generate_toc(pages: typing.List[Page], extension: str, index_source: str) -> str:
+def generate_toc(pages: typing.List[Page], extension: str, index_source: str, target: str) -> str:
     html = ''
     for page in pages:
         if page.source != index_source:
-            html = html + page.generate_html_list(extension, '  ')
+            html = html + page.generate_html_list(extension, '  ', target)
     return html
 
 
@@ -580,14 +596,20 @@ def handle_add(args):
 
             changed = True
         elif folder_exist(chapter_path):
-            print("Adding section {}".format(chapter))
-            section_path = os.path.join(chapter_path, CHAPTER_INDEX)
-            if file_exist(section_path):
-                update_frontmatter_chapter(section_path)
-                book.add_chapter(chapter)
-                changed = True
+            index_path = os.path.join(chapter_path, CHAPTER_INDEX)
+            section_path = os.path.join(chapter_path, CHAPTER_FILE)
+            if file_exist(index_path):
+                if file_exist(section_path):
+                    print('Existing section {} already added'.format(chapter))
+                else:
+                    print("Adding section {}".format(chapter))
+                    chap = Chapter()
+                    chap.save(section_path)
+                    update_frontmatter_chapter(index_path)
+                    book.add_chapter(chapter)
+                    changed = True
             else:
-                print("Missing section file: {}".format(section_path))
+                print("Missing section file: {}".format(index_path))
         else:
             print("File '{}' doesn't exist".format(chapter_path))
 
@@ -608,13 +630,14 @@ def handle_build(_):
     book_folder = os.path.dirname(path)
     index_source = os.path.join(root, CHAPTER_INDEX)
     html = os.path.join(book_folder, 'html')
+    index_target = change_extension(os.path.join(html, CHAPTER_INDEX), ext)
     stat = Stat()
     templates = Templates(get_template_root(), ext)
 
     pages = []
     glob = book.generate_globals()
     book.generate_pages(book_folder, html, ext, stat, pages)
-    gen = GeneratedData(glob, ext, book_title='Book Title', root=book_folder, toc=generate_toc(pages, ext, index_source))
+    gen = GeneratedData(glob, ext, book_title='Book Title', root=book_folder, toc=generate_toc(pages, ext, index_source, index_target))
     for page in pages:
         if page.source == index_source:
             gen.book_title = page.general.title
