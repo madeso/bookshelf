@@ -17,15 +17,15 @@
 <nav class="top">
   {{#prev}}<span class="prev">&larr; <a href="{{prev}}">Previous Chapter</a></span>{{/prev}}
   {{#next}}<span class="next"><a href="{{next}}">Next Chapter</a> &rarr;</span>{{/next}}
-  <span class="toc">&equiv; <a href="index.html">The Book</a></span>
+  <span class="toc">&equiv; <a href="{{& index_html}}">The Book</a></span>
 </nav>
 <h1>{{header}}</h1>
-<h1 class="book"><a href="index.html">{{book_title}}</a>{{& section_header}}</h1>
+<h1 class="book"><a href="{{& index_html}}">{{book_title}}</a>{{& section_header}}</h1>
 {{& body}}
 <nav>
   {{#prev}}<span class="prev">&larr; <a href="{{prev}}">Previous Chapter</a></span>{{/prev}}
   {{#next}}<span class="next"><a href="{{next}}">Next Chapter</a> &rarr;</span>{{/next}}
-  <span class="toc">&equiv; <a href="index.html">The Book</a></span>
+  <span class="toc">&equiv; <a href="{{& index_html}}">The Book</a></span>
 </nav>
 </div>
 </div>

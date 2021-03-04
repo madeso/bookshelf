@@ -294,13 +294,14 @@ class GlobalData:
 
 
 class GeneratedData:
-    def __init__(self, glob: GlobalData, extension: str, book_title: str, root: str, toc: str, style_css: str):
+    def __init__(self, glob: GlobalData, extension: str, book_title: str, root: str, toc: str, style_css: str, index_html: str):
         self.glob = glob
         self.extension = extension
         self.book_title = book_title
         self.root = root
         self.toc = toc
         self.style_css = style_css
+        self.index_html = index_html
 
 
 class GuessedData:
@@ -384,6 +385,7 @@ class Page:
         data['header'] = info.title
         data['prev'] = prev_page
         data['next'] = next_page
+        data['index_html'] = make_relative(self.target, gen.index_html)
         data['style_css'] = make_relative(self.target, gen.style_css)
         data['book_title'] = gen.book_title
         data['copyright'] = gen.glob.copyright
@@ -641,7 +643,15 @@ def handle_build(_):
     pages = []
     glob = book.generate_globals()
     book.generate_pages(book_folder, html, ext, stat, pages)
-    gen = GeneratedData(glob, ext, book_title='Book Title', root=book_folder, toc=generate_toc(pages, ext, index_source, index_target), style_css=os.path.join(html, 'style.css'))
+    gen = GeneratedData(
+        glob,
+        ext,
+        book_title='Book Title',
+        root=book_folder,
+        toc=generate_toc(pages, ext, index_source, index_target),
+        style_css=os.path.join(html, 'style.css'),
+        index_html=os.path.join(html, 'index.html')
+        )
     for page in pages:
         if page.source == index_source:
             gen.book_title = page.general.title
