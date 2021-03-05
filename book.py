@@ -374,9 +374,6 @@ class Page:
             p = p.parent
         section_headers.reverse()
 
-        print(titles)
-        print(section_headers)
-
         prev_page = '' if self.prev_page is None else make_relative(self.target, self.prev_page.target)
         next_page = '' if self.next_page is None else make_relative(self.target, self.next_page.target)
 
