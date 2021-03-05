@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # Converts from the source markup format to HTML for the web version.
 
-# todo(Gustav): add back nested chapters
 # todo(Gustav): add watcher (with auto refresh like hugo)
 # todo(Gustav): copy source images to desination folder
 # todo(Gustav): action to transform image to local folder
