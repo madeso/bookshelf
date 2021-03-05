@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
 
-<title>{{title}} &middot; {{book_title}}</title>
+<title>{{#titles}}{{title}} &middot; {{/titles}}{{book_title}}</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <link rel="stylesheet" type="text/css" href="{{& style_css}}" />
@@ -20,7 +20,7 @@
   <span class="toc">&equiv; <a href="{{& index_html}}">The Book</a></span>
 </nav>
 <h1>{{header}}</h1>
-<h1 class="book"><a href="{{& index_html}}">{{book_title}}</a>{{& section_header}}</h1>
+<h1 class="book"><a href="{{& index_html}}">{{book_title}}</a>{{#section_headers}}<span class="section"><a href="{{&href}}">{{title}}</a></span>{{/section_headers}}</h1>
 {{& body}}
 <nav>
   {{#prev}}<span class="prev">&larr; <a href="{{prev}}">Previous Chapter</a></span>{{/prev}}

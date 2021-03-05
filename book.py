@@ -231,18 +231,6 @@ def make_relative(src: str, dst: str) -> str:
     rel = os.path.relpath(dst, source_folder)
     return rel
 
-###################################################################################################
-
-def generate_section_header(chapter_is_header: bool, chapter_title: str, parent_title, parent_href: typing.Optional[str], extension: str) -> typing.Tuple[str, str]:
-    title_text = chapter_title
-    section_header = ""
-
-    if not chapter_is_header and parent_href is not None:
-        title_text = chapter_title + " &middot; " + parent_title
-        section_href = change_extension(parent_href, extension)
-        section_header = '<span class="section"><a href="{}">{}</a></span>'.format(section_href, parent_title)
-
-    return (title_text, section_header)
 
 ###################################################################################################
 ###################################################################################################
@@ -357,8 +345,6 @@ class Page:
         # todo(Gustav): fix data
         self.parent = None
         self.children = []
-        self.parent_title = ''
-        self.parent_href = None
         stat.update(self.content, chapter, is_chapter)
 
     @staticmethod
@@ -374,18 +360,30 @@ class Page:
     def generate_chapter_data(self, template: str, gen: GeneratedData) -> str:
         data = {}
 
-        info = ChapterData(self.frontmatter, self.guess)
-
         data['body'] = run_markdown(self.content)
 
-        title, section_header = generate_section_header(not self.is_chapter, info.title, self.parent_title, self.parent_href, gen.extension)
+        titles = [{"title": self.general.title}]
+        section_headers = []
+
+        p = self.parent
+        while p is not None:
+            if p.parent is not None:
+                titles.append({"title": p.general.title})
+                section_href = make_relative(self.target, p.target)
+                section_headers.append({'title': p.general.title, 'href': section_href})
+            p = p.parent
+        section_headers.reverse()
+
+        print(titles)
+        print(section_headers)
 
         prev_page = '' if self.prev_page is None else make_relative(self.target, self.prev_page.target)
         next_page = '' if self.next_page is None else make_relative(self.target, self.next_page.target)
 
-        data['title'] = title
-        data['section_header'] = section_header
-        data['header'] = info.title
+        data['title'] = self.general.title
+        data['titles'] = titles
+        data['section_headers'] = section_headers
+        data['header'] = self.general.title
         data['prev'] = prev_page
         data['next'] = next_page
         data['index_html'] = make_relative(self.target, gen.index_html)
