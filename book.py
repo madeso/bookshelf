@@ -355,6 +355,8 @@ class Page:
         self.next_page = None
         self.prev_page = None
         # todo(Gustav): fix data
+        self.parent = None
+        self.children = []
         self.parent_title = ''
         self.parent_href = None
         stat.update(self.content, chapter, is_chapter)
@@ -417,14 +419,14 @@ class Page:
         generated = self.generate_index_data(templates.index, gen) if self.is_index else self.generate_chapter_data(templates.template, gen)
         write_file(generated, self.target)
 
-    def generate_html_list(self, _extension: str, indent: str, file: str):
+    def generate_html_list(self, extension: str, indent: str, file: str):
         html = indent + '<li><a href="{}">{}</a>'.format(make_relative(file, self.target), self.general.title)
         # todo(Gustav): handle children in toc
-        # if len(self.children) != 0:
-        #     html += '\n' + indent + '    <ul>\n'
-        #     for c in self.children:
-        #         html += c.generate_html_list(extension, indent + '    ') + '\n'
-        #     html += indent + '    </ul>\n' + indent
+        if len(self.children) > 0:
+            html += '\n' + indent + '    <ul>\n'
+            for c in self.children:
+                html += c.generate_html_list(extension, indent + '    ', file) + '\n'
+            html += indent + '    </ul>\n' + indent
         html += '</li>'
         return html
 
@@ -448,6 +450,15 @@ def update_frontmatter_chapter(chapter_path: str):
 
 def update_frontmatter_index(chapter_path: str):
     update_frontmatter(chapter_path, IndexData)
+
+
+def create_page(stat: Stat, chapter: str, source_folder: str, target_folder: str, ext: str) -> Page:
+    source = os.path.join(source_folder, chapter)
+    target = os.path.join(target_folder, change_extension(chapter, ext) if file_exist(source) else chapter)
+    book_index_file = os.path.join(os.path.dirname(find_book_file(source_folder)), CHAPTER_INDEX)
+    is_index = source == book_index_file
+    is_chapter = chapter == CHAPTER_INDEX
+    return Page(stat, chapter, source, target, is_chapter, is_index)
 
 
 class Chapter:
@@ -475,30 +486,40 @@ class Chapter:
         book.from_json(data)
         return book
 
-    def generate_pages(self, source_folder: str, target_folder: str, ext: str, stat: Stat, pages: typing.List[Page]):
-        chapters = []
-        if file_exist(os.path.join(source_folder, CHAPTER_INDEX)):
-            chapters.append(CHAPTER_INDEX)
-        chapters = chapters + self.chapters
+    def generate_pages(self, source_folder: str, target_folder: str, ext: str, stat: Stat, pages: typing.List[Page]) -> Page:
+        if not file_exist(os.path.join(source_folder, CHAPTER_INDEX)):
+            print('error: missing chapter index')
+
+        root_page = create_page(stat, CHAPTER_INDEX, source_folder, target_folder, ext)
+        pages.append(root_page)
 
         book_index_file = os.path.join(os.path.dirname(find_book_file(source_folder)), CHAPTER_INDEX)
 
-        for chapter in chapters:
+        for chapter in self.chapters:
             source = os.path.join(source_folder, chapter)
             target = os.path.join(target_folder, change_extension(chapter, ext) if file_exist(source) else chapter)
             if file_exist(source):
                 is_index = source == book_index_file
                 is_chapter = chapter == CHAPTER_INDEX
-                pages.append(Page(stat, chapter, source, target, is_chapter, is_index))
+                child_page = Page(stat, chapter, source, target, is_chapter, is_index)
+                pages.append(child_page)
+                root_page.children.append(child_page)
+                # if not root_page.is_index:
+                child_page.parent = root_page
             elif folder_exist(source):
                 section_file = os.path.join(source, CHAPTER_FILE)
                 if file_exist(section_file):
                     section = Chapter.load(section_file)
-                    section.generate_pages(source, target, ext, stat, pages)
+                    child_page = section.generate_pages(source, target, ext, stat, pages)
+
+                    root_page.children.append(child_page)
+                    child_page.parent = root_page
                 else:
                     print('ERROR: missing chapter file {}'.format(section_file))
             else:
                 print('Neither file nor folder: {}'.format(source))
+
+        return root_page
 
 
     def update_frontmatters(self, source_folder: str):
@@ -658,19 +679,16 @@ def handle_build(_):
 
     pages = []
     glob = book.generate_globals()
-    book.generate_pages(book_folder, html, ext, stat, pages)
+    root_page = book.generate_pages(book_folder, html, ext, stat, pages)
     gen = GeneratedData(
         glob,
         ext,
-        book_title='Book Title',
+        book_title=root_page.general.title,
         root=book_folder,
-        toc=generate_toc(pages, ext, index_source, index_target),
+        toc=generate_toc([root_page] + root_page.children, ext, index_source, index_target),
         style_css=os.path.join(html, 'style.css'),
         index_html=os.path.join(html, 'index.html')
         )
-    for page in pages:
-        if page.source == index_source:
-            gen.book_title = page.general.title
     Page.post_generation(pages)
 
     copy_default_html_files(gen.style_css)
