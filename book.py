@@ -17,6 +17,7 @@ import argparse
 import time
 import json
 import re
+import urllib
 # import subprocess
 
 # non-standard dependencies
@@ -233,11 +234,26 @@ def make_relative(src: str, dst: str) -> str:
 
 
 # ![alt text](url)
-re_image = re.compile(r'!\[[^\]]*\]\(([^)]+)\)')
+re_image = re.compile(r'!\[([^\]]*)\]\(([^)]+)\)')
+re_image_alt = 1
+re_image_url = 2
 
 def list_images_in_markdown(md: str) -> typing.Iterable[str]:
     for match in re_image.finditer(md):
-        yield match.group(1)
+        yield match.group(re_image_url)
+
+
+def replace_image_in_markdown(md: str, path: str, replacements: typing.Dict[str, str]) -> str:
+    def replace_image_with_replacement(match):
+        orig = match.group(0)
+        alt_text = match.group(re_image_alt)
+        orig_url = match.group(re_image_url)
+        if orig_url in replacements:
+            new_url = make_relative(path, replacements[orig_url])
+            return '![{}]({})'.format(alt_text, new_url)
+        else:
+            return orig
+    return re_image.sub(replace_image_with_replacement, md)
 
 
 ###################################################################################################
@@ -751,6 +767,38 @@ def handle_list_images(_):
             print(image)
 
 
+def handle_make_local(_):
+    root = os.getcwd()
+    path = find_book_file(root)
+    if path is None:
+        print('This is not a book')
+        return
+
+    book = Book.load(path)
+
+    images = {}
+
+    markdown_files = list(book.iterate_markdown_files())
+
+    for md in markdown_files:
+        _, content = read_frontmatter_file(md)
+        markdown_folder = os.path.dirname(md)
+        for image in list_images_in_markdown(content):
+            url = urllib.parse.urlparse(image)
+            if url.scheme != '':
+                image_name = os.path.basename(url.path)
+                target_path = os.path.join(markdown_folder, image_name)
+                if file_exist(target_path):
+                    print('Image {} for {} already exists'.format(image_name, md))
+                images[image] = target_path
+
+    for md in markdown_files:
+        frontmatter, content = read_frontmatter_file(md)
+        content = replace_image_in_markdown(content, md, images)
+        write_frontmatter_file(md, frontmatter, content)
+
+    print('{} replacements made'.format(len(images)))
+
 ###################################################################################################
 ###################################################################################################
 ###################################################################################################
@@ -770,6 +818,9 @@ def main():
 
     sub = sub_parsers.add_parser('build', help='Generate html')
     sub.set_defaults(func=handle_build)
+
+    sub = sub_parsers.add_parser('make_local', help='Download external image and update markdown')
+    sub.set_defaults(func=handle_make_local)
 
     list_parsers = sub_parsers.add_parser('list', help='List things').add_subparsers(dest='command_name', title='list commands', metavar='<command>')
 
