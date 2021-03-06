@@ -18,6 +18,7 @@ import time
 import json
 import re
 import urllib
+import urllib.request
 # import subprocess
 
 # non-standard dependencies
@@ -796,6 +797,10 @@ def handle_make_local(_):
         frontmatter, content = read_frontmatter_file(md)
         content = replace_image_in_markdown(content, md, images)
         write_frontmatter_file(md, frontmatter, content)
+
+    for source, dest in images.items():
+        if not file_exist(dest):
+            urllib.request.urlretrieve(source, dest)
 
     print('{} replacements made'.format(len(images)))
 
