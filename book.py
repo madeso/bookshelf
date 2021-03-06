@@ -748,7 +748,8 @@ def main():
     sub = sub_parsers.add_parser('build', help='Generate html')
     sub.set_defaults(func=handle_build)
 
-    sub = sub_parsers.add_parser('list', help='List all markdown files')
+    list_parsers = sub_parsers.add_parser('list', help='List things').add_subparsers(dest='command_name', title='list commands', metavar='<command>')
+    sub = list_parsers.add_parser('markdown', help='List all markdown files')
     sub.set_defaults(func=handle_list)
 
     args = parser.parse_args()
