@@ -456,8 +456,10 @@ def create_page(stat: Stat, chapter: str, source_folder: str, target_folder: str
 
 
 class Chapter:
-    def __init__(self):
+    def __init__(self, file_path: str):
         self.chapters = []
+        self.file_path = file_path
+        self.source_folder = os.path.dirname(file_path)
 
     def add_chapter(self, chap: str):
         self.chapters.append(chap)
@@ -470,27 +472,27 @@ class Chapter:
         data[CHAPTER_JSON_CHAPTERS] = self.chapters
         return data
 
-    def save(self, file_path: str):
-        write_file(json.dumps(self.to_json(), indent=4), file_path)
+    def save(self):
+        write_file(json.dumps(self.to_json(), indent=4), self.file_path)
 
     @staticmethod
     def load(file_path: str) -> 'Chapter':
-        book = Chapter()
+        book = Chapter(file_path)
         data = json.loads(read_file(file_path))
         book.from_json(data)
         return book
 
-    def generate_pages(self, source_folder: str, target_folder: str, ext: str, stat: Stat, pages: typing.List[Page]) -> Page:
-        if not file_exist(os.path.join(source_folder, CHAPTER_INDEX)):
+    def generate_pages(self, target_folder: str, ext: str, stat: Stat, pages: typing.List[Page]) -> Page:
+        if not file_exist(os.path.join(self.source_folder, CHAPTER_INDEX)):
             print('error: missing chapter index')
 
-        root_page = create_page(stat, CHAPTER_INDEX, source_folder, target_folder, ext)
+        root_page = create_page(stat, CHAPTER_INDEX, self.source_folder, target_folder, ext)
         pages.append(root_page)
 
-        book_index_file = os.path.join(os.path.dirname(find_book_file(source_folder)), CHAPTER_INDEX)
+        book_index_file = os.path.join(os.path.dirname(find_book_file(self.source_folder)), CHAPTER_INDEX)
 
         for chapter in self.chapters:
-            source = os.path.join(source_folder, chapter)
+            source = os.path.join(self.source_folder, chapter)
             target = os.path.join(target_folder, change_extension(chapter, ext) if file_exist(source) else chapter)
             if file_exist(source):
                 is_index = source == book_index_file
@@ -504,7 +506,7 @@ class Chapter:
                 section_file = os.path.join(source, CHAPTER_FILE)
                 if file_exist(section_file):
                     section = Chapter.load(section_file)
-                    child_page = section.generate_pages(source, target, ext, stat, pages)
+                    child_page = section.generate_pages(target, ext, stat, pages)
 
                     root_page.children.append(child_page)
                     child_page.parent = root_page
@@ -516,13 +518,13 @@ class Chapter:
         return root_page
 
 
-    def update_frontmatters(self, source_folder: str):
-        index_file = os.path.join(source_folder, CHAPTER_INDEX)
+    def update_frontmatters(self):
+        index_file = os.path.join(self.source_folder, CHAPTER_INDEX)
         if file_exist(index_file):
             update_frontmatter_index(index_file)
 
         for chapter in self.chapters:
-            path = os.path.join(source_folder, chapter)
+            path = os.path.join(self.source_folder, chapter)
             update_frontmatter_chapter(path)
 
 
@@ -536,8 +538,8 @@ def generate_toc(pages: typing.List[Page], extension: str, index_source: str, ta
 
 
 class Book(Chapter):
-    def __init__(self):
-        Chapter.__init__(self)
+    def __init__(self, file_path: str):
+        Chapter.__init__(self, file_path)
         self.the_copyright = ''
 
     def from_json(self, data):
@@ -553,12 +555,12 @@ class Book(Chapter):
     def generate_globals(self) -> GlobalData:
         return GlobalData(self.the_copyright)
 
-    def save(self, file_path: str):
-        write_file(json.dumps(self.to_json(), indent=4), file_path)
+    def save(self):
+        write_file(json.dumps(self.to_json(), indent=4), self.file_path)
 
     @staticmethod
     def load(file_path: str) -> 'Book':
-        book = Book()
+        book = Book(file_path)
         data = json.loads(read_file(file_path))
         book.from_json(data)
         return book
@@ -583,14 +585,12 @@ def handle_init(args):
             print('Book is already defined in {}'.format(path))
             return
         book = Book.load(path)
-        book_folder = os.path.dirname(path)
-        book.update_frontmatters(book_folder)
+        book.update_frontmatters()
     else:
         path = book_path_in_folder(root)
-        book = Book()
-        book_folder = os.path.dirname(path)
-        book.update_frontmatters(book_folder)
-        book.save(path)
+        book = Book(path)
+        book.update_frontmatters()
+        book.save()
         print('Created book!')
 
 
@@ -640,8 +640,8 @@ def handle_add(args):
                     print('Existing section {} already added'.format(chapter))
                 else:
                     print("Adding section {}".format(chapter))
-                    chap = Chapter()
-                    chap.save(section_path)
+                    chap = Chapter(section_path)
+                    chap.save()
                     update_frontmatter_chapter(index_path)
                     book.add_chapter(chapter)
                     changed = True
@@ -651,7 +651,7 @@ def handle_add(args):
             print("File '{}' doesn't exist".format(chapter_path))
 
     if changed:
-        book.save(path)
+        book.save()
 
 
 def handle_build(_):
@@ -673,7 +673,7 @@ def handle_build(_):
 
     pages = []
     glob = book.generate_globals()
-    root_page = book.generate_pages(book_folder, html, ext, stat, pages)
+    root_page = book.generate_pages(html, ext, stat, pages)
     gen = GeneratedData(
         glob,
         ext,
