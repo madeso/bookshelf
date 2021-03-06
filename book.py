@@ -19,6 +19,7 @@ import json
 import re
 import urllib
 import urllib.request
+import shutil
 # import subprocess
 
 # non-standard dependencies
@@ -735,6 +736,19 @@ def handle_build(_):
     copy_default_html_files(gen.style_css)
     for page in pages:
         page.write(templates, gen)
+
+    for md in book.iterate_markdown_files():
+        _, content = read_frontmatter_file(md)
+        markdown_folder = os.path.dirname(md)
+        relative = make_relative(book.file_path, markdown_folder)
+        for image in list_images_in_markdown(content):
+            url = urllib.parse.urlparse(image)
+            if url.scheme == '':
+                image_name = os.path.basename(url.path)
+                source_path = os.path.join(markdown_folder, image_name)
+                target_path = os.path.realpath(os.path.join(html, relative, image_name))
+                print('Copying {}'.format(image_name))
+                shutil.copyfile(source_path, target_path)
 
     # generate
     stat.print_estimate()
