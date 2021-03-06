@@ -517,6 +517,17 @@ class Chapter:
 
         return root_page
 
+    def iterate_markdown_files(self) -> typing.Iterator[str]:
+        yield os.path.join(self.source_folder, CHAPTER_INDEX)
+        for chapter in self.chapters:
+            source = os.path.join(self.source_folder, chapter)
+            if file_exist(source):
+                yield source
+            elif folder_exist(source):
+                section_file = os.path.join(source, CHAPTER_FILE)
+                section = Chapter.load(section_file)
+                for p in section.iterate_markdown_files():
+                    yield p
 
     def update_frontmatters(self):
         index_file = os.path.join(self.source_folder, CHAPTER_INDEX)
@@ -564,6 +575,16 @@ class Book(Chapter):
         data = json.loads(read_file(file_path))
         book.from_json(data)
         return book
+
+    def iterate_markdown_files(self) -> typing.Iterator[str]:
+        chapter_path = os.path.join(self.source_folder, CHAPTER_INDEX)
+        frontmatter, _ = read_frontmatter_file(chapter_path)
+        if frontmatter is not None:
+            data = IndexData(frontmatter, GuessedData(chapter_path))
+            yield os.path.join(self.source_folder, data.sidebar_file)
+            yield os.path.join(self.source_folder, data.author_file)
+        for p in super().iterate_markdown_files():
+            yield p
 
 
 ###################################################################################################
@@ -693,6 +714,19 @@ def handle_build(_):
     stat.print_estimate()
 
 
+def handle_list(_):
+    root = os.getcwd()
+
+    path = find_book_file(root)
+    if path is None:
+        print('This is not a book')
+        return
+
+    book = Book.load(path)
+
+    for md in book.iterate_markdown_files():
+        print(md)
+
 
 ###################################################################################################
 ###################################################################################################
@@ -713,6 +747,9 @@ def main():
 
     sub = sub_parsers.add_parser('build', help='Generate html')
     sub.set_defaults(func=handle_build)
+
+    sub = sub_parsers.add_parser('list', help='List all markdown files')
+    sub.set_defaults(func=handle_list)
 
     args = parser.parse_args()
     if args.command_name is not None:
