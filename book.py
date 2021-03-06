@@ -16,6 +16,7 @@ import typing
 import argparse
 import time
 import json
+import re
 # import subprocess
 
 # non-standard dependencies
@@ -229,6 +230,14 @@ def make_relative(src: str, dst: str) -> str:
     source_folder = os.path.dirname(src)
     rel = os.path.relpath(dst, source_folder)
     return rel
+
+
+# ![alt text](url)
+re_image = re.compile(r'!\[[^\]]*\]\(([^)]+)\)')
+
+def list_images_in_markdown(md: str) -> typing.Iterable[str]:
+    for match in re_image.finditer(md):
+        yield match.group(1)
 
 
 ###################################################################################################
@@ -716,7 +725,6 @@ def handle_build(_):
 
 def handle_list(_):
     root = os.getcwd()
-
     path = find_book_file(root)
     if path is None:
         print('This is not a book')
@@ -726,6 +734,21 @@ def handle_list(_):
 
     for md in book.iterate_markdown_files():
         print(md)
+
+
+def handle_list_images(_):
+    root = os.getcwd()
+    path = find_book_file(root)
+    if path is None:
+        print('This is not a book')
+        return
+
+    book = Book.load(path)
+
+    for md in book.iterate_markdown_files():
+        _, content = read_frontmatter_file(md)
+        for image in list_images_in_markdown(content):
+            print(image)
 
 
 ###################################################################################################
@@ -749,8 +772,12 @@ def main():
     sub.set_defaults(func=handle_build)
 
     list_parsers = sub_parsers.add_parser('list', help='List things').add_subparsers(dest='command_name', title='list commands', metavar='<command>')
+
     sub = list_parsers.add_parser('markdown', help='List all markdown files')
     sub.set_defaults(func=handle_list)
+
+    sub = list_parsers.add_parser('images', help='List all images')
+    sub.set_defaults(func=handle_list_images)
 
     args = parser.parse_args()
     if args.command_name is not None:
