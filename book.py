@@ -2,9 +2,7 @@
 # Converts from the source markup format to HTML for the web version.
 
 # todo(Gustav): add watcher (with auto refresh like hugo)
-# todo(Gustav): copy source images to desination folder
-# todo(Gustav): action to transform image to local folder
-# todo(Gustav): action to modify markdown and download image
+# todo(Gustav): action to transform each chapter to local folder
 # todo(Gustav): action to modify downloaded image, change format and make black-white and dithering
 # todo(Gustav): support epub
 
