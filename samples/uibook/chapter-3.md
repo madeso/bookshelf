@@ -14,7 +14,7 @@ Software has a similar archaeological record, too: it's called the Options dialo
 
 It doesn't even have to be a debate between two people: it can be an internal dilemma. I just *can't decide* if we should optimize the database for size or speed. Either way, you wind up with things like what is unequivocally the most moronic "wizard" dialog in the history of the Windows operating system. This dialog is so stupid that it deserves some kind of award. A whole new *category* of award. It's the dialog that comes up when you try to find something in Help:
 
-![image](https://i1.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Stupidest_Dialog_Ever.gif)
+![image](Stupidest_Dialog_Ever.gif)
 
 The first problem with this dialog is that it's distracting. You are trying to find help in the help file. You do not, at that particular moment, give a hoot whether the database is small, big, customized, or chocolate-covered. In the meanwhile, this wicked, wicked dialog is giving you little pedantic lectures that it must create a list (or database). There are about three paragraphs there, most of which are completely confusing. There's the painfully awkward phrase "your help file(s)". You see, you may have *one or more* files. As if you  **cared ** at this point that there could be more than one. As if it made the slightest amount of difference. But the programmer who worked on that dialog was obviously distressed beyond belief at the possibility that there might be more than one help file(s) and it would be incorrect to say help file, now, wouldn't it?
 
@@ -43,7 +43,7 @@ The toolbar was so successful that the Excel team did field research using a spe
 
 The trouble was, they never got around to disbanding the toolbar team, who didn't seem to know when to leave good enough alone. They wanted you to be able to *customize* your toolbar. They wanted you to be able to drag the toolbar anywhere on the screen. Then, they started to think about how the menu bar is really just a glorified toolbar with words instead of icons, so they let you drag the *menu bar *anywhere you wanted on the screen, too. Customizability on steroids. Problem: nobody cares! I've never met anyone who wants their menu bar anywhere except at the top of the window. But here's the (bad) joke: if you try to pull down the File menu, and you accidentally grab the menu bar a tiny bit too far to the left, you yank off the whole menu bar, dragging it to the only place you could not possibly want it to be: blocking the document you're working on.
 
-![image](https://i2.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Arthritis.gif)
+![image](Arthritis.gif)
 
 How many times have you seen *that*? And once you've done this by mistake, it's not clear what you did or how to fix it. So here we have an option (moving the menu bar) that nobody wants (ok, maybe 0.1% of all humans want it) but which gets in the way for almost everybody.
 
@@ -53,7 +53,7 @@ Half the screen was grey?
 
 It took me five minutes over the phone to figure out what had happened. She had accidentally dragged the Windows toolbar to the right side of the screen, then accidentally widened it:
 
-![image](https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Whoops_I_Did_it_Again.gif)
+![image](Whoops_I_Did_it_Again.gif)
 
 This is the kind of thing that nobody does *on purpose*. And there are a lot of computer users out there who can't get themselves out of this kind of mess; by definition, when you accidentally reconfigure one of the options in your program, you don't know how to re-reconfigure it. It's sort of shocking how many people uninstall and then reinstall their software when things start behaving wrong, because at least they know how to do that. (They've learned to uninstall first, because otherwise all the broken customizations are likely to just come back).
 

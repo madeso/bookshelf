@@ -29,11 +29,11 @@ In ye olden days when I worked on Excel, laptops didn't come with pointing devic
 
 One of the UI elements which bothers me the most is the dropdown combo list box. That's the one that looks like this:
 
-![image](https://i2.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Font_Dropdown_Collapsed.gif)
+![image](Font_Dropdown_Collapsed.gif)
 
 When you click on the down arrow, it expands:
 
-![image](https://i1.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Font_Dropdown.gif)
+![image](Font_Dropdown.gif)
 
 Think about how many detailed mouse clicks it's going to take to choose, say, Times New Roman. First, you have to click on the down arrow. Then, using the scroll bar, you have to carefully scroll until Times New Roman is in view. Many of these dropdowns are carelessly designed to show only two or three items at a time, so this scrolling is none too easy, especially if you have a lot of fonts. It involves either carefully dragging the thumb (with such a small range of movement, it's probably unlikely that this will work), or clicking repeatedly on the second down arrow, or trying to click in the area between the thumb and the down area - which will eventually stop working when the thumb gets low enough, annoying you even further. Finally, if you do manage to get Times New Roman into view, you have to click on it. If you miss, you get to start all over again. Now multiply by 10, if, say, you want to use a fancy font for the first letter in each of your chapters, and you're *really *unhappy
 
@@ -43,13 +43,13 @@ Furthermore, don't make me click on the little tiny arrow to the right of the ed
 
 Let's look at another problem with mousing: edit boxes. You may have noticed that almost every edit box on the Macintosh uses a **fat, wide, bold font** called Chicago which looks kind of ugly and distresses graphic designers to no end. Graphic designers (unlike UI designers) have been taught that thin, variable spaced fonts are more gracious, look better, and are easier to read. All this is true. But graphic designers learned their skills on *paper*, not on the screen. When you need to *edit* text, monospace has a major advantage over variable spaced fonts: it's easier to see and select narrow letters like "l" and "i". I learned this lesson after watching a sixty year old man in a usability test painfully trying to edit the name of his street, which was something like Fillmore Street. We were using 8 point Arial, so the edit box looked like this:
 
-![image](https://i1.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Thin_Edit_Box.gif)
+![image](Thin_Edit_Box.gif)
 
 Notice that the I and the Ls are literally *one pixel wide*. The difference between a lower case I and a lower case L is literally *one pixel.* (Similarly, it is almost impossible to see the difference between "RN" and "M" in lower case, so this edit box might actually say Fillrnore.)
 
 There are very few people who would notice if they mistyped Flilmore or Fiilmore or Fillrnore, and even if they did, they would have a *heck* of a time trying to use the mouse to select the offending letter and correct it. In fact, they would even have a hard time using the blinking cursor, which is two pixels wide, to select a single letter. Look how much easier it would have been if we had used a fat font (shown here with Courier Bold)
 
-![image](https://i1.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Fat_Edit_Box.gif)
+![image](Fat_Edit_Box.gif)
 
 Fine, OK, so it takes up more space and doesn't look as cool to your graphic designers. Deal with it! It's much easier to use; it even *feels *better to use because as the user types, they get sharp, clear text, and it's so much easier to edit.
 

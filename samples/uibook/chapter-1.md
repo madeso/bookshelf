@@ -12,11 +12,11 @@ I'm not going to give you "Zen and the Art of UI Design". It's not art, it's not
 
 My first real job was in a big, industrial bakery. The bakery was designed to have six bread production lines. For every two production lines, there was a dough mixer, which produced 180 kg lumps of dough that could be dumped to the left or the right:
 
-![image](https://i1.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Oranim_As_Designed.gif)
+![image](Oranim_As_Designed.gif)
 
 Well, this was the design. In reality, Mixer C hadn't been built yet, nor had lines 3 or 5. So the arrangement was:
 
-![image](https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Oranim_As_Implemented.gif)
+![image](Oranim_As_Implemented.gif)
 
 Alert readers will be wondering, "how did the dough get from Mixer B to production line 6?" Well, that's where Wee Joel came in. My job, if you can believe this, was to stand on the left of Mixer B, then *catch* the giant 180 kg lumps of dough as they flew out of the mixer in a big bathtub-with-wheels, then roll the bathtub over to production line 6, and, using a winch-like device, heave the dough onto line 6. I had to do this once every ten minutes, from about 10 PM until 4 AM.
 

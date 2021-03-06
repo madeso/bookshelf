@@ -27,11 +27,11 @@ This may sound a little harsh, but you'll see, when you do usability tests, that
 
 The fact that users do not read the manual leads many software designers to assume that they are going to have to educate users by describing things as they go along. You see this all over the place in programs. In principle, it's OK, but in reality, people's aversion to reading means that this will almost always get you in trouble. Experienced UI designers literally try to minimize the number of words on dialogs to increase the chances that they will get read. When I worked on Juno, the UI people understood this principle and tried to write short, clear, simple text. Sadly, the CEO of the company had been an English major at an Ivy League college; he had no training in UI design or software engineering, but he sure *thought* he was a good editor of prose. So he vetoed the wording done by the professional UI designers and added lots of his own verbiage. A typical dialog in Juno looks like this:
 
-![image](https://i2.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Juno_Modem_Options.gif)
+![image](Juno_Modem_Options.gif)
 
 Compare that to the equivalent dialog from Windows:
 
-![image](https://i1.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Windows_Modem_Options.gif)
+![image](Windows_Modem_Options.gif)
 
 Intuitively, you might guess that the Juno version, with 80 words of instructions, would be "superior" (i.e., easier to use) than the Windows version, with 5 words of instructions. In reality, when you run a usability test on this kind of thing, you'll find that
 
@@ -44,13 +44,13 @@ Now, Juno was obviously micro-managed beyond all reason. More to the point, if y
 
 Another important point is that  **many people are intimidated by computers **. You probably know this, right? But you may not realize the implications of this. I was watching a friend try to exit Juno. For some reason she was having quite a bit of trouble. I noticed that when you try to exit Juno, the following dialog pops up:
 
-![image](https://i1.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/BlahBlahBlah.gif)
+![image](BlahBlahBlah.gif)
 
 She was hitting  **No **, and then she was kind of surprised that Juno hadn't exited. The very fact that Juno was questioning her choice made her immediately assume that she was doing something wrong. Usually, when programs ask you to confirm a command, it's because you're about to do something which you might regret. She had assumed that if *the computer* was questioning her judgment, then *the computer* must have been right, because, after all, computers are *computers* where as she was merely a *human*, so she hit "No."
 
 Is it too much to ask people to read 11 lousy words? Well, apparently. First of all, since exiting Juno has no deleterious effects, Juno should have just exited without prompting for confirmation, like every other GUI program in existence. But even if you are *convinced* that it is *crucial* that people confirm before exiting, you could do it in two words instead of 11:
 
-![image](https://i2.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Exit_Now.gif)
+![image](Exit_Now.gif)
 
 Without the completely unnecessary "thank you" and the remorse-inspiring "are you *sure?*", this dialog is a lot less likely to cause problems. Users will certainly read the two words, say "um, duh?" to the program, and pound the Yes key.
 

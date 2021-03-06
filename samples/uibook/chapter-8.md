@@ -6,23 +6,23 @@ Another example is the menus themselves. Historically, providing a complete menu
 
 Consider the file selection process in a typical graphics program:
 
-![image](https://i1.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/05/File_Open.gif)
+![image](File_Open.gif)
 
  Luckily, Windows 98 introduced thumbnail support, so you can see the files like this:
 
-![image](https://i2.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/05/Thumbnails.gif)
+![image](Thumbnails.gif)
 
 This makes it significantly easier to open the file you want; it doesn't even take the mental effort to map words onto pictures.
 
 You can see the minimum-memory principle at work in features like auto completion, too. Even if you need to type something, some programs make educated guesses about what you're about to type:
 
-![image](https://i1.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/05/Excel_Auto_Complete.gif)
+![image](Excel_Auto_Complete.gif)
 
 In this example, as soon as you type "M", Excel guesses that you are likely to be typing Male, because you've typed Male before in this column, and proposes that as the auto completion. But the "ale" is *preselected* so that if you didn't *mean* to type Male, you can keep typing (perhaps "ystery") and overwrite Excel's guess with no lost effort.
 
 Microsoft Word gets a little bit carried away guessing what you are about to type, as anybody that has ever used that product during the merry month of May has discovered:
 
-![image](https://i2.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/05/Word_Auto_Complete.gif)
+![image](Word_Auto_Complete.gif)
 
 ### Designing For People Who Have Better Things To Do With Their Lives, Redux
 In the preceding chapters, I've brought up three principles:

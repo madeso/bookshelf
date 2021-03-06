@@ -34,7 +34,7 @@ If you're making a high end photo editor for graphics professionals, I assure yo
 
 There is another popular tendency to reinvent the common controls that come with Windows. Don't even get me started about Netscape 6. There was a time when you could tell the programs that were compiled with Borland's C++ compiler because they used big fat OK buttons with giant green checkboxes. This wasn't nearly as bad as Kai's Photo Soap:
 
-![image](https://i2.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Quit_Soap.gif)
+![image](Quit_Soap.gif)
 
 Fine, so, it's stunningly beautiful, but the O with a line through it (which actually means "no") reminds me of "OK," and the standard on Windows is to have OK on the left, so I wind up hitting the wrong button a lot. The only benefit to having funny symbols instead of "OK" and "Cancel" like everyone else is that you get to show off how *creative* you are. If people make mistakes because of Kai's creativity, well, that's just the price they have to pay for being in the presence of an *artist*. (Another problem with this "dialog" is that it doesn't have a standard title bar which can be used to move the dialog around on the screen. So if the dialog gets in the way of something you want to see in order to answer the question in the dialog, you are out of luck.)
 

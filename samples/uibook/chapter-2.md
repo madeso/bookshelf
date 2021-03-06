@@ -36,11 +36,11 @@ An important rule of thumb is that user models aren't very complex. When people 
 
 Sit down at a Macintosh. Open two Excel spreadsheet files and Word document file. Almost any novice user would guess that the windows were independent. They *look* independent:
 
-![image](https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Excel_After.gif)
+![image](Excel_After.gif)
 
 The user model says that clicking on Spreadsheet 1 would bring that window to the front. What *really* happens is that Spreadsheet  **2 ** comes to the front, a frustrating surprise for almost anybody:
 
-![image](https://i1.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/04/Excel_Before.gif)
+![image](Excel_Before.gif)
 
 As it turns out, Microsoft Excel's program model says that "you have these invisible sheets, one for each application, and the windows are 'glued' to those invisible sheets. When you bring Excel to the foreground, all other windows from Excel will move forward, too."
 
