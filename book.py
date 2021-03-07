@@ -326,7 +326,14 @@ class GeneratedData:
 
 class GuessedData:
     def __init__(self, source: str):
-        self.title = os.path.splitext(os.path.basename(source))[0]
+        base = os.path.basename(source)
+        if base == CHAPTER_INDEX:
+            parent = os.path.abspath(os.path.join(source, os.pardir))
+            base = os.path.basename(parent)
+            self.title = base
+        else:
+            print(base)
+            self.title = os.path.splitext(base)[0]
 
 
 TOML_GENERAL_TITLE = 'title'
