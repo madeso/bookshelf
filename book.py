@@ -772,8 +772,12 @@ def handle_add(args):
         book.save()
 
 
+def name_from_title(title: str) -> str:
+    return title.lower().replace(' ', '_').replace('.', '').replace('/', '-')
+
+
 def new_page(book: Chapter, title: str, content: str) -> bool:
-    chapter = title.lower().replace(' ', '_').replace('.', '').replace('/', '-') + '.md'
+    chapter = name_from_title(title) + '.md'
     chapter_path = os.path.join(book.source_folder, chapter)
     if file_exist(chapter_path):
         print('{} already exists, so ignoring...'.format(chapter))
@@ -828,43 +832,75 @@ def markdown_extract_pages_from_file(path: str) -> typing.Iterable[typing.Tuple[
 
 def handle_split_markdown(args):
     root = os.getcwd()
-    path = find_book_file(root)
-    if path is None:
+    book = get_book_or_chapter(root)
+    if book is None:
         print('This is not a book, consider using import instead')
         return
-    book = Book(path)
+    from_file_path = os.path.join(book.source_folder, args.file)
+    frontmatter, content = read_frontmatter_file(from_file_path)
+    pages = list(markdown_extract_pages_from_lines(content.splitlines()))
+
+    if args.print:
+        for data in pages:
+            title, lines = data
+            print('{} ({})'.format(title, len(lines)))
+        return
+    else:
+        if len(pages)==0:
+            print('Zero pages found.')
+            return
+
+    remaining_content = ''
+    first_title, first_content = pages[0]
+    if len(first_title.strip()) == 0:
+        remaining_content = '\n'.join(first_content)
+        pages = pages[1:]
+
+    if len(pages) == 0:
+        print('Only titme page found... aborting')
+        return
+
     if args.file == CHAPTER_INDEX:
-        from_file_path = os.path.join(book.source_folder, args.file)
-        frontmatter, content = read_frontmatter_file(from_file_path)
-        pages = list(markdown_extract_pages_from_lines(content.splitlines()))
+        write_frontmatter_file(from_file_path, frontmatter, remaining_content)
+        for data in pages:
+            title, lines = data
+            new_page(book, title, '\n'.join(lines))
 
-        if args.print:
-            for data in pages:
-                title, lines = data
-                print('{} ({})'.format(title, len(lines)))
-        else:
-            if len(pages)==0:
-                print('Zero pages found.')
-                return
-
-            remaining_content = ''
-            first_title, first_content = pages[0]
-            if len(first_title.strip()) == 0:
-                remaining_content = '\n'.join(first_content)
-                pages = pages[1:]
-
-            write_frontmatter_file(from_file_path, frontmatter, remaining_content)
-            for data in pages:
-                title, lines = data
-                new_page(book, title, '\n'.join(lines))
-
-            book.save()
+        book.save()
     else:
         if args.file not in book.chapters:
             print('This is not a page in a chapter!')
             return
-        print('This is a page I know')
 
+        original_page_file = os.path.join(book.source_folder, args.file)
+        dir_name = os.path.splitext(args.file)[0]
+        dir_path = os.path.join(book.source_folder, dir_name)
+
+        # replace page with chapter in book
+        book.chapters = [dir_name if chap==args.file else chap for chap in book.chapters]
+
+        # remove original page
+        os.unlink(original_page_file)
+
+        # create chapter directory
+        if not os.path.isdir(dir_path):
+            os.mkdir(dir_path)
+
+        sub_chapter_index = os.path.join(dir_path, CHAPTER_FILE)
+        chapter = Chapter(sub_chapter_index)
+
+        # create chapter index with title and remaining content
+        chapter_path = os.path.join(dir_path, CHAPTER_INDEX)
+        chapter_title = GeneralData(frontmatter, GuessedData(chapter_path)).title
+        update_frontmatter_chapter(chapter_path, GuessedData(chapter_path, chapter_title), remaining_content)
+
+        # add split pages in sub chapter
+        for data in pages:
+            title, lines = data
+            new_page(chapter, title, '\n'.join(lines))
+
+        chapter.save()
+        book.save()
 
 
 def handle_import_markdown(args):
