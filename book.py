@@ -325,15 +325,18 @@ class GeneratedData:
 
 
 class GuessedData:
-    def __init__(self, source: str):
-        base = os.path.basename(source)
-        if base == CHAPTER_INDEX:
-            parent = os.path.abspath(os.path.join(source, os.pardir))
-            base = os.path.basename(parent)
-            self.title = base
+    def __init__(self, source: str, title: typing.Optional[str] = None):
+        if title is not None:
+            self.title = title
         else:
-            print(base)
-            self.title = os.path.splitext(base)[0]
+            base = os.path.basename(source)
+            if base == CHAPTER_INDEX:
+                parent = os.path.abspath(os.path.join(source, os.pardir))
+                base = os.path.basename(parent)
+                self.title = base
+            else:
+                print(base)
+                self.title = os.path.splitext(base)[0]
 
 
 TOML_GENERAL_TITLE = 'title'
@@ -465,25 +468,25 @@ class Page:
         return html
 
 
-def update_frontmatter(chapter_path: str, create_data):
+def update_frontmatter(chapter_path: str, create_data, guess_arg: typing.Optional[GuessedData]):
     frontmatter, content = read_frontmatter_file(chapter_path, missing_is_error=False)
     write_chapter = False
     if frontmatter is None:
         write_chapter = True
         frontmatter = {}
-        guess = GuessedData(chapter_path)
+        guess = guess_arg or GuessedData(chapter_path)
         chapter = create_data(frontmatter, guess)
         chapter.generate(frontmatter)
     if write_chapter:
         write_frontmatter_file(chapter_path, frontmatter, content)
 
 
-def update_frontmatter_chapter(chapter_path: str):
-    update_frontmatter(chapter_path, ChapterData)
+def update_frontmatter_chapter(chapter_path: str, guess: typing.Optional[GuessedData] = None):
+    update_frontmatter(chapter_path, ChapterData, guess)
 
 
 def update_frontmatter_index(chapter_path: str):
-    update_frontmatter(chapter_path, IndexData)
+    update_frontmatter(chapter_path, IndexData, None)
 
 
 def create_page(stat: Stat, chapter: str, source_folder: str, target_folder: str, ext: str) -> Page:
@@ -664,8 +667,7 @@ def handle_init(args):
         print('Created book!')
 
 
-def handle_add(args):
-    root = os.getcwd()
+def get_book_or_chapter(root: str) -> typing.Optional[Chapter]:
     path = get_book_file(root)
     book = None
     if path is None:
@@ -677,21 +679,30 @@ def handle_add(args):
             else:
                 print('Missing {}'.format(p))
                 print('This is not a chapter folder!')
-                return
+                return None
         else:
             print('This is not a book!')
-            return
+            return None
     else:
         book = Book.load(path)
 
     if book is None:
         print('BUG: Book is None')
+        return None
+    else:
+        return book
+
+
+def handle_add(args):
+    book = get_book_or_chapter(os.getcwd())
+    if book is None:
         return
-    index_source = os.path.join(root, CHAPTER_INDEX)
+
+    index_source = os.path.join(book.source_folder, CHAPTER_INDEX)
 
     changed = False
     for chapter in args.chapters:
-        chapter_path = os.path.join(root, chapter)
+        chapter_path = os.path.join(book.source_folder, chapter)
         if file_exist(chapter_path):
             if chapter_path == index_source:
                 print('{} evaluates to the index file, this is always added, so ignoring...'.format(chapter))
@@ -716,6 +727,26 @@ def handle_add(args):
                 changed = True
         else:
             print("File '{}' doesn't exist".format(chapter_path))
+
+    if changed:
+        book.save()
+
+
+def handle_new_page(args):
+    book = get_book_or_chapter(os.getcwd())
+    if book is None:
+        return
+
+    for title in args.pages:
+        chapter = title.lower().replace(' ', '_').replace('.', '').replace('/', '-') + '.md'
+
+        chapter_path = os.path.join(book.source_folder, chapter)
+        if file_exist(chapter_path):
+            print('{} already exists, so ignoring...'.format(chapter))
+            continue
+        book.add_chapter(chapter)
+        update_frontmatter_chapter(chapter_path, GuessedData(source=chapter_path, title=title))
+        changed = True
 
     if changed:
         book.save()
@@ -850,9 +881,13 @@ def main():
     sub.add_argument('--update', action='store_true')
     sub.set_defaults(func=handle_init)
 
-    sub = sub_parsers.add_parser('add', help='Add a thing to a book')
+    sub = sub_parsers.add_parser('add', help='Add a existing page or chapter to a book')
     sub.add_argument('chapters', nargs='+', metavar='chapter')
     sub.set_defaults(func=handle_add)
+
+    sub = sub_parsers.add_parser('new', help='Add a new page to a book')
+    sub.add_argument('pages', nargs='+', metavar='page')
+    sub.set_defaults(func=handle_new_page)
 
     sub = sub_parsers.add_parser('build', help='Generate html')
     sub.set_defaults(func=handle_build)
