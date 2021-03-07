@@ -475,7 +475,29 @@ class Page:
         return html
 
 
-def update_frontmatter(chapter_path: str, create_data, guess_arg: typing.Optional[GuessedData]):
+def strip_empty_start(lines: typing.Iterable[str]) -> typing.Iterable[str]:
+        empty = True
+        for li in lines:
+            if len(li.strip()) == 0:
+                if empty:
+                    pass
+                else:
+                    yield li
+            else:
+                empty = False
+                yield li
+
+
+def strip_empty(lines: typing.List[str]) -> typing.List[str]:
+    cleared = lines
+    cleared.reverse()
+    cleared = list(strip_empty_start(cleared)) # end
+    cleared.reverse()
+    cleared = list(strip_empty_start(cleared)) # start
+    return cleared
+
+
+def update_frontmatter(chapter_path: str, create_data, guess_arg: typing.Optional[GuessedData], extra_content: typing.Optional[str]):
     frontmatter, content = read_frontmatter_file(chapter_path, missing_is_error=False)
     write_chapter = False
     if frontmatter is None:
@@ -491,16 +513,20 @@ def update_frontmatter(chapter_path: str, create_data, guess_arg: typing.Optiona
         chapter.generate(frontmatter)
         if fmo != frontmatter_to_string(frontmatter):
             write_chapter = True
-    if write_chapter:
-        write_frontmatter_file(chapter_path, frontmatter, content)
+    if write_chapter or extra_content is not None:
+        cc = strip_empty(content.splitlines())
+        if extra_content is not None:
+            cc = cc + [''] + strip_empty(extra_content.splitlines())
+        cc = strip_empty(cc)
+        write_frontmatter_file(chapter_path, frontmatter, '\n'.join(cc))
 
 
-def update_frontmatter_chapter(chapter_path: str, guess: typing.Optional[GuessedData] = None):
-    update_frontmatter(chapter_path, ChapterData, guess)
+def update_frontmatter_chapter(chapter_path: str, guess: typing.Optional[GuessedData] = None, content: typing.Optional[str] = None):
+    update_frontmatter(chapter_path, ChapterData, guess, content)
 
 
 def update_frontmatter_index(chapter_path: str):
-    update_frontmatter(chapter_path, IndexData, None)
+    update_frontmatter(chapter_path, IndexData, None, '')
 
 
 def create_page(stat: Stat, chapter: str, source_folder: str, target_folder: str, ext: str) -> Page:
@@ -746,65 +772,99 @@ def handle_add(args):
         book.save()
 
 
+def new_page(book: Chapter, title: str, content: str) -> bool:
+    chapter = title.lower().replace(' ', '_').replace('.', '').replace('/', '-') + '.md'
+    chapter_path = os.path.join(book.source_folder, chapter)
+    if file_exist(chapter_path):
+        print('{} already exists, so ignoring...'.format(chapter))
+        return False
+    book.add_chapter(chapter)
+    update_frontmatter_chapter(chapter_path, GuessedData(source=chapter_path, title=title), content=content)
+    return True
+
+
 def handle_new_page(args):
     book = get_book_or_chapter(os.getcwd())
     if book is None:
         return
 
     for title in args.pages:
-        chapter = title.lower().replace(' ', '_').replace('.', '').replace('/', '-') + '.md'
-
-        chapter_path = os.path.join(book.source_folder, chapter)
-        if file_exist(chapter_path):
-            print('{} already exists, so ignoring...'.format(chapter))
-            continue
-        book.add_chapter(chapter)
-        update_frontmatter_chapter(chapter_path, GuessedData(source=chapter_path, title=title))
-        changed = True
+        if new_page(book ,title, ''):
+            changed = True
 
     if changed:
         book.save()
 
 
-def markdown_extract_pages(path: str) -> typing.Iterable[typing.Tuple[str, typing.List[str]]]:
-    def strip_empty_start(lines: typing.Iterable[str]) -> typing.Iterable[str]:
-        empty = True
-        for li in lines:
-            if len(li.strip()) == 0:
-                if empty:
-                    pass
-                else:
-                    yield li
-            else:
-                empty = False
-                yield li
-    def strip_empty(lines: typing.List[str]) -> typing.List[str]:
-        cleared = lines
-        cleared.reverse()
-        cleared = list(strip_empty_start(cleared)) # end
-        cleared.reverse()
-        cleared = list(strip_empty_start(cleared)) # start
-        return cleared
+re_markdown_header_tag = re.compile(r'\{#[^}]+\}')
+
+def markdown_extract_pages_from_lines(file: typing.Iterable[str]) -> typing.Iterable[typing.Tuple[str, typing.List[str]]]:
     header = None
     lines = []
-    with open(path) as file:
-        for line_space in file:
-            line = line_space.rstrip()
-            if line.startswith('# '):
-                if header is None:
-                    lines = strip_empty(lines)
-                    if len(lines) > 0:
-                        yield ('', lines)
-                else:
-                    yield (header, strip_empty(lines))
-                lines = []
-                header = line[1:].strip()
+    for line_space in file:
+        line = line_space.rstrip()
+        if line.startswith('# '):
+            if header is None:
+                lines = strip_empty(lines)
+                if len(lines) > 0:
+                    yield ('', lines)
             else:
-                if line.startswith('#'):
-                    line = line[1:]
-                lines.append(line)
+                yield (header, strip_empty(lines))
+            lines = []
+            header = re_markdown_header_tag.sub('', line[1:].strip()).strip()
+        else:
+            if line.startswith('#'):
+                line = line[1:]
+            lines.append(line)
     if header is not None:
         yield(header, strip_empty(lines))
+
+
+def markdown_extract_pages_from_file(path: str) -> typing.Iterable[typing.Tuple[str, typing.List[str]]]:
+    with open(path) as file:
+        lines = file.readlines()
+        return markdown_extract_pages_from_lines(lines)
+
+
+def handle_split_markdown(args):
+    root = os.getcwd()
+    path = find_book_file(root)
+    if path is None:
+        print('This is not a book, consider using import instead')
+        return
+    book = Book(path)
+    if args.file == CHAPTER_INDEX:
+        from_file_path = os.path.join(book.source_folder, args.file)
+        frontmatter, content = read_frontmatter_file(from_file_path)
+        pages = list(markdown_extract_pages_from_lines(content.splitlines()))
+
+        if args.print:
+            for data in pages:
+                title, lines = data
+                print('{} ({})'.format(title, len(lines)))
+        else:
+            if len(pages)==0:
+                print('Zero pages found.')
+                return
+
+            remaining_content = ''
+            first_title, first_content = pages[0]
+            if len(first_title.strip()) == 0:
+                remaining_content = '\n'.join(first_content)
+                pages = pages[1:]
+
+            write_frontmatter_file(from_file_path, frontmatter, remaining_content)
+            for data in pages:
+                title, lines = data
+                new_page(book, title, '\n'.join(lines))
+
+            book.save()
+    else:
+        if args.file not in book.chapters:
+            print('This is not a page in a chapter!')
+            return
+        print('This is a page I know')
+
 
 
 def handle_import_markdown(args):
@@ -813,7 +873,7 @@ def handle_import_markdown(args):
     if not file_exist(path):
         print('Missing file ', path)
         return
-    pages = list(markdown_extract_pages(path))
+    pages = list(markdown_extract_pages_from_file(path))
 
     if args.print:
         for data in pages:
@@ -987,6 +1047,11 @@ def main():
     sub.add_argument('file')
     sub.add_argument('--print', action='store_true')
     sub.set_defaults(func=handle_import_markdown)
+
+    sub = sub_parsers.add_parser('split', help='Split a existing chapter or page to several pages or chapters')
+    sub.add_argument('file')
+    sub.add_argument('--print', action='store_true')
+    sub.set_defaults(func=handle_split_markdown)
 
     sub = sub_parsers.add_parser('build', help='Generate html')
     sub.set_defaults(func=handle_build)
