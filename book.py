@@ -705,18 +705,15 @@ def handle_add(args):
         elif folder_exist(chapter_path):
             index_path = os.path.join(chapter_path, CHAPTER_INDEX)
             section_path = os.path.join(chapter_path, CHAPTER_FILE)
-            if file_exist(index_path):
-                if file_exist(section_path):
-                    print('Existing section {} already added'.format(chapter))
-                else:
-                    print("Adding section {}".format(chapter))
-                    chap = Chapter(section_path)
-                    chap.save()
-                    update_frontmatter_chapter(index_path)
-                    book.add_chapter(chapter)
-                    changed = True
+            if file_exist(section_path):
+                print('Existing section {} already added'.format(chapter))
             else:
-                print("Missing section file: {}".format(index_path))
+                print("Adding section {}".format(chapter))
+                chap = Chapter(section_path)
+                chap.save()
+                update_frontmatter_chapter(index_path)
+                book.add_chapter(chapter)
+                changed = True
         else:
             print("File '{}' doesn't exist".format(chapter_path))
 
