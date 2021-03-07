@@ -752,6 +752,67 @@ def handle_new_page(args):
         book.save()
 
 
+def markdown_extract_pages(path: str) -> typing.Iterable[typing.Tuple[str, typing.List[str]]]:
+    def strip_empty_start(lines: typing.Iterable[str]) -> typing.Iterable[str]:
+        empty = True
+        for li in lines:
+            if len(li.strip()) == 0:
+                if empty:
+                    pass
+                else:
+                    yield li
+            else:
+                empty = False
+                yield li
+    def strip_empty(lines: typing.List[str]) -> typing.List[str]:
+        cleared = lines
+        cleared.reverse()
+        cleared = list(strip_empty_start(cleared)) # end
+        cleared.reverse()
+        cleared = list(strip_empty_start(cleared)) # start
+        return cleared
+    header = None
+    lines = []
+    with open(path) as file:
+        for line_space in file:
+            line = line_space.rstrip()
+            if line.startswith('# '):
+                if header is None:
+                    lines = strip_empty(lines)
+                    if len(lines) > 0:
+                        yield ('', lines)
+                else:
+                    yield (header, strip_empty(lines))
+                lines = []
+                header = line[1:].strip()
+            else:
+                if line.startswith('#'):
+                    line = line[1:]
+                lines.append(line)
+    if header is not None:
+        yield(header, strip_empty(lines))
+
+
+def handle_import_markdown(args):
+    path = os.path.abspath(args.file)
+    if not file_exist(path):
+        print('Missing file ', path)
+        return
+    pages = list(markdown_extract_pages(path))
+
+    if args.print:
+        for data in pages:
+            title, lines = data
+            print('{} ({})'.format(title, len(lines)))
+    else:
+        if len(pages) > 1:
+            print('Unable to create a book from {}'.format(path))
+            return
+
+
+
+
+
 def handle_build(_):
     root = os.getcwd()
     ext = 'html'
@@ -888,6 +949,11 @@ def main():
     sub = sub_parsers.add_parser('new', help='Add a new page to a book')
     sub.add_argument('pages', nargs='+', metavar='page')
     sub.set_defaults(func=handle_new_page)
+
+    sub = sub_parsers.add_parser('import', help='Import book from markdown')
+    sub.add_argument('file')
+    sub.add_argument('--print', action='store_true')
+    sub.set_defaults(func=handle_import_markdown)
 
     sub = sub_parsers.add_parser('build', help='Generate html')
     sub.set_defaults(func=handle_build)
