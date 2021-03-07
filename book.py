@@ -105,6 +105,13 @@ def read_frontmatter_file(path: str, missing_is_error: bool = True) -> typing.Tu
             return (None, ''.join(first))
 
 
+def frontmatter_to_string(frontmatter:typing.Optional[typing.Any]) -> str:
+    if frontmatter is not None:
+        return toml.dumps(frontmatter).rstrip()
+    else:
+        return ''
+
+
 def write_frontmatter_file(path: str, frontmatter:typing.Optional[typing.Any], content:str):
     print('Writing ' + path)
     directory = os.path.dirname(path)
@@ -477,6 +484,13 @@ def update_frontmatter(chapter_path: str, create_data, guess_arg: typing.Optiona
         guess = guess_arg or GuessedData(chapter_path)
         chapter = create_data(frontmatter, guess)
         chapter.generate(frontmatter)
+    else:
+        fmo = frontmatter_to_string(frontmatter)
+        guess = guess_arg or GuessedData(chapter_path)
+        chapter = create_data(frontmatter, guess)
+        chapter.generate(frontmatter)
+        if fmo != frontmatter_to_string(frontmatter):
+            write_chapter = True
     if write_chapter:
         write_frontmatter_file(chapter_path, frontmatter, content)
 
@@ -794,6 +808,7 @@ def markdown_extract_pages(path: str) -> typing.Iterable[typing.Tuple[str, typin
 
 
 def handle_import_markdown(args):
+    root = os.getcwd()
     path = os.path.abspath(args.file)
     if not file_exist(path):
         print('Missing file ', path)
@@ -808,6 +823,24 @@ def handle_import_markdown(args):
         if len(pages) > 1:
             print('Unable to create a book from {}'.format(path))
             return
+
+        path = find_book_file(root)
+        if path is not None:
+            print('This is a book, importing will create a new book')
+            return
+
+        index_file = os.path.join(root, CHAPTER_INDEX)
+        title, lines = pages[0]
+        frontmatter = {}
+        guess = GuessedData(index_file, title)
+        data = GeneralData({}, guess)
+        data.generate(frontmatter)
+        write_frontmatter_file(index_file, frontmatter, '\n'.join(lines))
+
+        path = book_path_in_folder(root)
+        book = Book(path)
+        book.save()
+        book.update_frontmatters()
 
 
 
