@@ -1,7 +1,5 @@
 # book.py
-The elevator pitch of this script is to take markdown and generate a beautiful book.
-
-HTHL template is based on/inspired by the online version of [programming patterns book](http://gameprogrammingpatterns.com/)
+The elevator pitch of this script is to take markdown and generate a beautiful book with no extra work.
 
 ## Usage
 
@@ -39,3 +37,14 @@ open html/index.html
 ```
 
 Enjoy!
+
+
+## Samples/Credits
+
+HTHL template is based on/inspired by the online version of [programming patterns book](http://gameprogrammingpatterns.com/)
+
+The test book is a [loren ipsum](https://www.lipsum.com/) generated book.
+
+The ui book is a 'book' copied from on a [blog series by Joel Spolsky](https://www.joelonsoftware.com/2001/10/24/user-interface-design-for-programmers/)
+
+The cli book is from [clig.dev](https://clig.dev/) and it's [markdown source](https://github.com/cli-guidelines/cli-guidelines).
