@@ -67,6 +67,7 @@ FRONTMATTER_SEPERATOR_MIN_LENGTH = 3
 def file_exist(file: str) -> bool:
     return os.path.isfile(file)
 
+
 def folder_exist(file: str) -> bool:
     return os.path.isdir(file)
 
@@ -77,10 +78,12 @@ def read_file(path: str) -> str:
         return input_file.read()
 
 
-def read_frontmatter_file(path: str) -> typing.Tuple[typing.Any, str]:
+def read_frontmatter_file(path: str, missing_is_error: bool = True) -> typing.Tuple[typing.Any, str]:
     has_frontmatter = False
     first = []
     second = []
+    if not missing_is_error and not file_exist(path):
+        return (None, '')
     with open(path, 'r', encoding='utf-8') as input_file:
         for line in input_file:
             if not has_frontmatter:
@@ -119,6 +122,11 @@ def write_file(contents: str, path: str) -> str:
     os.makedirs(directory, exist_ok=True)
     with open(path, 'w', encoding='utf-8') as file_handle:
         print(contents, file=file_handle)
+
+
+def touch_file(path: str):
+    if not file_exist(path):
+        write_file('', path)
 
 
 def run_markdown(contents: str):
@@ -451,7 +459,7 @@ class Page:
 
 
 def update_frontmatter(chapter_path: str, create_data):
-    frontmatter, content = read_frontmatter_file(chapter_path)
+    frontmatter, content = read_frontmatter_file(chapter_path, missing_is_error=False)
     write_chapter = False
     if frontmatter is None:
         write_chapter = True
@@ -555,9 +563,18 @@ class Chapter:
                     yield p
 
     def update_frontmatters(self):
+        is_book = file_exist(os.path.join(self.source_folder, BOOK_FILE))
         index_file = os.path.join(self.source_folder, CHAPTER_INDEX)
-        if file_exist(index_file):
+        if is_book:
             update_frontmatter_index(index_file)
+
+            fm, _ = read_frontmatter_file(index_file)
+            guess = GuessedData(index_file)
+            data = IndexData(fm, guess)
+            touch_file(os.path.join(self.source_folder, data.author_file))
+            touch_file(os.path.join(self.source_folder, data.sidebar_file))
+        else:
+            update_frontmatter_chapter(index_file)
 
         for chapter in self.chapters:
             path = os.path.join(self.source_folder, chapter)
@@ -635,8 +652,8 @@ def handle_init(args):
     else:
         path = book_path_in_folder(root)
         book = Book(path)
-        book.update_frontmatters()
         book.save()
+        book.update_frontmatters()
         print('Created book!')
 
 
