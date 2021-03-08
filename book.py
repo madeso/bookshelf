@@ -2,7 +2,6 @@
 # Converts from the source markup format to HTML for the web version.
 
 
-# todo(Gustav): add markdown to headers
 # todo(Gustav): add watcher (with auto refresh like hugo)
 # todo(Gustav): action change image format and make black-white and dithering
 # todo(Gustav): support epub
@@ -364,11 +363,19 @@ class ParsedFrontmatter:
         frontmatter[TOML_GENERAL_TITLE] = self.title
 
 
+def drop_p_tag(html: str) -> str:
+    s = html.strip()
+    if s.startswith('<p>') and s.endswith('</p>'):
+        return s[3:-4]
+    else:
+        return s
+
+
 class Page:
     def __init__(self, chapter: str, source: str, target: str, html_body: str, title: str):
         self.source = source
         self.target = target
-        self.title = title
+        self.title = drop_p_tag(run_markdown(title))
         self.html_body = html_body
         self.chapter = chapter
         self.next_page = None
