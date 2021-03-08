@@ -140,8 +140,17 @@ def touch_file(path: str):
         write_file('', path)
 
 
+re_subscript = re.compile(r'\[([^\]]+)\]\{\.subscript\}')
+
+def math_to_html(content: str) -> str:
+    def replce_math(match):
+        thing = match.group(1)
+        return '<sub>{}</sub>'.format(thing)
+    return re_subscript.sub(replce_math, content)
+
 def run_markdown(contents: str):
-    body = markdown.markdown(contents, extensions=['extra', 'def_list', 'codehilite'])
+    cc = math_to_html(contents)
+    body = markdown.markdown(cc, extensions=['extra', 'def_list', 'codehilite'])
     body = body.replace('<aside markdown="1"', '<aside')
     return body
 
