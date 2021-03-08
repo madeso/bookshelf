@@ -511,8 +511,11 @@ class Chapter:
         self.file_path = file_path
         self.source_folder = os.path.dirname(file_path)
 
-    def add_chapter(self, chap: str):
-        self.chapters.append(chap)
+    def add_chapter(self, chap: str, add_at_start: bool = False):
+        if add_at_start:
+            self.chapters.insert(0, chap)
+        else:
+            self.chapters.append(chap)
 
     def from_json(self, data):
         self.chapters = data[CHAPTER_JSON_CHAPTERS]
@@ -756,17 +759,18 @@ def name_from_title(title: str) -> str:
     t = t.replace(':', '')
     t = t.replace('(', '')
     t = t.replace(')', '')
+    t = t.replace('?', '')
     t = t.replace('/', '-')
     return t
 
 
-def new_page(book: Chapter, title: str, content: str) -> bool:
+def new_page(book: Chapter, title: str, content: str, add_at_start: bool = False) -> bool:
     chapter = name_from_title(title) + '.md'
     chapter_path = os.path.join(book.source_folder, chapter)
     if file_exist(chapter_path):
         print('{} already exists, so ignoring...'.format(chapter))
         return False
-    book.add_chapter(chapter)
+    book.add_chapter(chapter, add_at_start)
     update_frontmatter_chapter(chapter_path, GuessedData(source=chapter_path, title=title), content=content)
     return True
 
@@ -843,6 +847,8 @@ def handle_split_markdown(args):
         print('This is not a book, consider using import instead')
         return
 
+    book_has_only_toc = len(book.chapters) == 1 and TOC_INDEX in book.chapters
+
     for args_file in args.files:
         from_file_path = os.path.join(book.source_folder, args_file)
         frontmatter, content = read_frontmatter_file(from_file_path)
@@ -871,9 +877,12 @@ def handle_split_markdown(args):
 
         if args_file == CHAPTER_INDEX:
             write_frontmatter_file(from_file_path, frontmatter, remaining_content)
+            if not book_has_only_toc:
+                # since we add to the start, we need to go in reverse
+                pages.reverse()
             for data in pages:
                 title, lines = data
-                new_page(book, title, '\n'.join(lines))
+                new_page(book, title, '\n'.join(lines), add_at_start=not book_has_only_toc)
 
             book.save()
         else:
