@@ -300,6 +300,7 @@ footer
 .codehilite .k
 {
     color: #1481b8;
+    font-weight: bold;
 }
 
 .codehilite .kd
@@ -310,6 +311,7 @@ footer
 .codehilite .kt
 {
     color: #09a;
+    font-weight: bold;
 }
 
 .codehilite .s
