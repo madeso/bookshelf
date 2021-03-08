@@ -2,6 +2,7 @@
 # Converts from the source markup format to HTML for the web version.
 
 
+# todo(Gustav): when splitting a index.md and there is existing pages, the newly added pages are added to the end
 # todo(Gustav): add markdown to headers
 # todo(Gustav): add watcher (with auto refresh like hugo)
 # todo(Gustav): action change image format and make black-white and dithering
