@@ -903,6 +903,33 @@ def handle_split_markdown(args):
         book.save()
 
 
+
+
+def handle_indent_markdown(args):
+    root = os.getcwd()
+    book = get_book_or_chapter(root)
+    if book is None:
+        print('This is not a book, consider using import instead')
+        return
+    from_file_path = os.path.join(book.source_folder, args.file)
+    frontmatter, content = read_frontmatter_file(from_file_path)
+    pages = list(markdown_extract_pages_from_lines(content.splitlines()))
+
+    if args.print:
+        for data in pages:
+            title, lines = data
+            print('{} ({})'.format(title, len(lines)))
+        return
+    if len(pages)==0:
+        print('Zero pages found.')
+        return
+
+    lines = content.splitlines()
+    newlines = ['#' + line if line.startswith('#') else line for line in lines]
+
+    write_frontmatter_file(from_file_path, frontmatter, '\n'.join(newlines))
+
+
 def handle_import_markdown(args):
     root = os.getcwd()
     path = os.path.abspath(args.file)
@@ -1088,6 +1115,11 @@ def main():
     sub.add_argument('file')
     sub.add_argument('--print', action='store_true')
     sub.set_defaults(func=handle_split_markdown)
+
+    sub = sub_parsers.add_parser('indent', help='indent headers so that they are no longer toplevel')
+    sub.add_argument('file')
+    sub.add_argument('--print', action='store_true')
+    sub.set_defaults(func=handle_indent_markdown)
 
     sub = sub_parsers.add_parser('build', help='Generate html')
     sub.set_defaults(func=handle_build)
