@@ -599,7 +599,18 @@ class Chapter:
 
 def generate_toc(pages: typing.List[Page], extension: str, index_source: str, target: str) -> str:
     html = ''
-    for page in pages:
+
+    # add only pages after toc, or if toc is missing then add all
+    children = []
+    found_toc = False
+    for c in pages:
+        if found_toc:
+            children.append(c)
+        if c.html_body == TOC_HTML_BODY:
+            found_toc = True
+    children = pages if len(children) == 0 and not found_toc else children
+
+    for page in children:
         if page.source != index_source:
             html = html + page.generate_html_list(extension, '  ', target)
     return html
