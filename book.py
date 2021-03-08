@@ -619,6 +619,7 @@ def generate_toc(pages: typing.List[Page], extension: str, index_source: str, ta
 class Book(Chapter):
     def __init__(self, file_path: str):
         Chapter.__init__(self, file_path)
+        self.chapters.append(TOC_INDEX)
         self.the_copyright = ''
 
     def from_json(self, data):
