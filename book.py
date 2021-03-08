@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # Converts from the source markup format to HTML for the web version.
 
+
 # todo(Gustav): add markdown to headers
-# todo(Gustav): split index into "cover" page and a seperate toc page
-# todo(Gustav): make top bar prettier
 # todo(Gustav): add watcher (with auto refresh like hugo)
 # todo(Gustav): action change image format and make black-white and dithering
 # todo(Gustav): support epub
