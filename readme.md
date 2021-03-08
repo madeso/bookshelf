@@ -50,7 +50,7 @@ book split index.md
 book split guidelines.md
 
 # philosopy has several top level headers but each are too small for
-# seperate chapters 'indent' the headers to make it look nicer
+# seperate chapters. 'indent' the headers to make it look nicer
 book indent philosphy.md
 
 book build
