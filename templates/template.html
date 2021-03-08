@@ -1,34 +1,43 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
-<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+    <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+        <title>{{#titles}}{{title}} &middot; {{/titles}}{{book_title}}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+        <link rel="stylesheet" type="text/css" href="{{& style_css}}" />
+        <link href="http://fonts.googleapis.com/css?family=Merriweather:400,400italic,700,700italic|Source+Code+Pro|Source+Sans+Pro:200,300,400,600,400italic,600italic|Rock+Salt" rel="stylesheet" type="text/css">
+    </head>
+    <body id="top">
+        <div class="page sidebar">
+            <div class="content">
+                <nav class="top">
+                    <table width="100%">
+                        <tr>
+                            <td>
+                                {{#prev}}<span class="prev"><a href="{{prev}}">&larr; Previous Chapter</a></span>{{/prev}}
+                            </td>
+                            <td>
+                                <span class="toc">&equiv; <a href="{{& index_html}}">The Book</a></span>
+                            </td>
+                                <td>
+                                {{#next}}<span class="next"><a href="{{next}}">Next Chapter &rarr;</a></span>{{/next}}
+                            </td>
+                        </tr>
+                    </table>
+                </nav>
+                <h1>{{header}}</h1>
 
-<title>{{#titles}}{{title}} &middot; {{/titles}}{{book_title}}</title>
+                <h1 class="book"><a href="{{& index_html}}">{{book_title}}</a>{{#section_headers}}<span class="section"><a href="{{&href}}">{{title}}</a></span>{{/section_headers}}</h1>
 
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<link rel="stylesheet" type="text/css" href="{{& style_css}}" />
-<link href="http://fonts.googleapis.com/css?family=Merriweather:400,400italic,700,700italic|Source+Code+Pro|Source+Sans+Pro:200,300,400,600,400italic,600italic|Rock+Salt" rel="stylesheet" type="text/css">
-<script src="jquery-1.10.1.min.js"></script>
-<script src="script.js"></script>
-</head>
-<body id="top">
-<div class="page sidebar">
-<div class="content">
-<nav class="top">
-  {{#prev}}<span class="prev">&larr; <a href="{{prev}}">Previous Chapter</a></span>{{/prev}}
-  {{#next}}<span class="next"><a href="{{next}}">Next Chapter</a> &rarr;</span>{{/next}}
-  <span class="toc">&equiv; <a href="{{& index_html}}">The Book</a></span>
-</nav>
-<h1>{{header}}</h1>
-<h1 class="book"><a href="{{& index_html}}">{{book_title}}</a>{{#section_headers}}<span class="section"><a href="{{&href}}">{{title}}</a></span>{{/section_headers}}</h1>
-{{& body}}
-<nav>
-  {{#prev}}<span class="prev">&larr; <a href="{{prev}}">Previous Chapter</a></span>{{/prev}}
-  {{#next}}<span class="next"><a href="{{next}}">Next Chapter</a> &rarr;</span>{{/next}}
-  <span class="toc">&equiv; <a href="{{& index_html}}">The Book</a></span>
-</nav>
-</div>
-</div>
-<footer>&copy; {{copyright}}</footer>
-</body>
+                {{& body}}
+
+                <nav>
+                    {{#prev}}<span class="prev">&larr; <a href="{{prev}}">Previous Chapter</a></span>{{/prev}}
+                    {{#next}}<span class="next"><a href="{{next}}">Next Chapter</a> &rarr;</span>{{/next}}
+                    <span class="toc">&equiv; <a href="{{& index_html}}">The Book</a></span>
+                </nav>
+            </div>
+        </div>
+        <footer>&copy; {{copyright}}</footer>
+    </body>
 </html>

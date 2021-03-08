@@ -351,8 +351,6 @@ class GuessedData:
 
 
 TOML_GENERAL_TITLE = 'title'
-TOML_INDEX_SIDEBAR = 'sidebar_file'
-TOML_INDEX_AUTHOR = 'author_file'
 
 
 class GeneralData:
@@ -366,13 +364,9 @@ class GeneralData:
 class IndexData(GeneralData):
     def __init__(self,  frontmatter: typing.Any, guess: GuessedData):
         GeneralData.__init__(self, frontmatter, guess)
-        self.sidebar_file = get_toml(frontmatter, TOML_INDEX_SIDEBAR, 'sidebar.md')
-        self.author_file = get_toml(frontmatter, TOML_INDEX_AUTHOR, 'author.md')
 
     def generate(self, frontmatter: typing.Any):
         super().generate(frontmatter)
-        frontmatter[TOML_INDEX_SIDEBAR] = self.sidebar_file
-        frontmatter[TOML_INDEX_AUTHOR] = self.author_file
 
 
 class ChapterData(GeneralData):
@@ -450,16 +444,11 @@ class Page:
 
         data['index'] = run_markdown(self.content)
 
-        sidebar_file = os.path.join(gen.root, info.sidebar_file)
-        author_file = os.path.join(gen.root, info.author_file)
-
         data['book_title'] = gen.book_title
         data['copyright'] = gen.glob.copyright
         data['style_css'] = make_relative(self.target, gen.style_css)
         data['toc'] = gen.toc
         data['first_page'] = '' if self.next_page is None else make_relative(self.target, self.next_page.target)
-        data['sidebar'] = run_markdown(read_file(sidebar_file))
-        data['author'] = run_markdown(read_file(author_file))
 
         return pystache_render(self.source, template, data)
 
@@ -625,8 +614,6 @@ class Chapter:
             fm, _ = read_frontmatter_file(index_file)
             guess = GuessedData(index_file)
             data = IndexData(fm, guess)
-            touch_file(os.path.join(self.source_folder, data.author_file))
-            touch_file(os.path.join(self.source_folder, data.sidebar_file))
         else:
             update_frontmatter_chapter(index_file)
 
@@ -677,8 +664,6 @@ class Book(Chapter):
         frontmatter, _ = read_frontmatter_file(chapter_path)
         if frontmatter is not None:
             data = IndexData(frontmatter, GuessedData(chapter_path))
-            yield os.path.join(self.source_folder, data.sidebar_file)
-            yield os.path.join(self.source_folder, data.author_file)
         for p in super().iterate_markdown_files():
             yield p
 

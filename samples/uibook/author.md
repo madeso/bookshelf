@@ -1,3 +1,5 @@
+title = "About the author"
++++
 Joel Spolsky is a software developer in New York City.
 
 ![Joel not playing pong](Pong.png)
