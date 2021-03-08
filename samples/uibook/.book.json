@@ -1,6 +1,7 @@
 {
     "chapter": {
         "chapters": [
+            "toc.md",
             "foreword.md",
             "chapter-1.md",
             "chapter-2.md",

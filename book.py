@@ -49,6 +49,10 @@ CHAPTER_FILE = '.chapter.json'
 # index or readme? readme.md goes nice with github browsing but index.html is another standard
 CHAPTER_INDEX = 'index.md'
 
+TOC_INDEX = 'toc.md'
+
+#  special html syntax to hack in toc in a generated page
+TOC_HTML_BODY = '__toc_html_body__'
 
 ###################################################################################################
 # JSON keys
@@ -282,7 +286,6 @@ def replace_image_in_markdown(md: str, path: str, replacements: typing.Dict[str,
 
 class Templates:
     def __init__(self, folder: str, ext: str):
-        self.index = read_file(os.path.join(folder, 'index.' + ext))
         self.template = read_file(os.path.join(folder, 'template.' + ext))
 
 
@@ -325,7 +328,7 @@ class GlobalData:
 
 
 class GeneratedData:
-    def __init__(self, glob: GlobalData, extension: str, book_title: str, root: str, toc: str, style_css: str, index_html: str):
+    def __init__(self, glob: GlobalData, extension: str, book_title: str, root: str, toc: str, style_css: str, index_html: str, toc_html: str):
         self.glob = glob
         self.extension = extension
         self.book_title = book_title
@@ -333,6 +336,7 @@ class GeneratedData:
         self.toc = toc
         self.style_css = style_css
         self.index_html = index_html
+        self.toc_html = toc_html
 
 
 class GuessedData:
@@ -353,7 +357,7 @@ class GuessedData:
 TOML_GENERAL_TITLE = 'title'
 
 
-class GeneralData:
+class ParsedFrontmatter:
     def __init__(self, frontmatter: typing.Any, guess: GuessedData):
         self.title = get_toml(frontmatter, TOML_GENERAL_TITLE, guess.title)
 
@@ -361,104 +365,74 @@ class GeneralData:
         frontmatter[TOML_GENERAL_TITLE] = self.title
 
 
-class IndexData(GeneralData):
-    def __init__(self,  frontmatter: typing.Any, guess: GuessedData):
-        GeneralData.__init__(self, frontmatter, guess)
-
-    def generate(self, frontmatter: typing.Any):
-        super().generate(frontmatter)
-
-
-class ChapterData(GeneralData):
-    def __init__(self,  frontmatter: typing.Any, guess: GuessedData):
-        GeneralData.__init__(self, frontmatter, guess)
-
-    def generate(self, frontmatter: typing.Any):
-        super().generate(frontmatter)
-
-
 class Page:
-    def __init__(self, stat: Stat, chapter: str, source: str, target: str, is_chapter: bool, is_index: bool):
+    def __init__(self, chapter: str, source: str, target: str, html_body: str, title: str):
         self.source = source
         self.target = target
-        self.frontmatter, self.content = read_frontmatter_file(self.source)
-        self.guess = GuessedData(self.source)
-        self.general = GeneralData(self.frontmatter, self.guess)
-        self.is_chapter = is_chapter
-        self.is_index = is_index
+        self.title = title
+        self.html_body = html_body
         self.chapter = chapter
         self.next_page = None
         self.prev_page = None
-        # todo(Gustav): fix data
         self.parent = None
         self.children = []
-        stat.update(self.content, chapter, is_chapter)
+
+    @staticmethod
+    def from_file(stat: Stat, chapter: str, source: str, target: str, is_chapter: bool) -> 'Page':
+        frontmatter, content = read_frontmatter_file(source)
+        guess = GuessedData(source)
+        general = ParsedFrontmatter(frontmatter, guess)
+        html_body = run_markdown(content)
+        title = general.title
+        stat.update(content, chapter, is_chapter)
+        return Page(chapter, source, target, html_body, title)
 
     @staticmethod
     def post_generation(pages: typing.List['Page']):
         last_page = None
         for page in pages:
-            if last_page is not pages[0]:
-                page.prev_page = last_page
+            page.prev_page = last_page
             if last_page is not None:
                 last_page.next_page = page
             last_page = page
 
-    def generate_chapter_data(self, template: str, gen: GeneratedData) -> str:
+    def write(self, templates: Templates, gen: GeneratedData):
         data = {}
+        template = templates.template
 
-        data['body'] = run_markdown(self.content)
-
-        titles = [{"title": self.general.title}]
+        titles = [{"title": self.title}]
         section_headers = []
 
         p = self.parent
         while p is not None:
             if p.parent is not None:
-                titles.append({"title": p.general.title})
+                titles.append({"title": p.title})
                 section_href = make_relative(self.target, p.target)
-                section_headers.append({'title': p.general.title, 'href': section_href})
+                section_headers.append({'title': p.title, 'href': section_href})
             p = p.parent
         section_headers.reverse()
 
         prev_page = '' if self.prev_page is None else make_relative(self.target, self.prev_page.target)
         next_page = '' if self.next_page is None else make_relative(self.target, self.next_page.target)
 
-        data['title'] = self.general.title
+        data['body'] = gen.toc if self.html_body == TOC_HTML_BODY else self.html_body
+        data['title'] = self.title
         data['titles'] = titles
         data['section_headers'] = section_headers
-        data['header'] = self.general.title
+        data['header'] = self.title
         data['prev'] = prev_page
         data['next'] = next_page
         data['index_html'] = make_relative(self.target, gen.index_html)
+        data['toc_html'] = make_relative(self.target, gen.toc_html)
         data['style_css'] = make_relative(self.target, gen.style_css)
         data['book_title'] = gen.book_title
         data['copyright'] = gen.glob.copyright
 
-        return pystache_render(self.source, template, data)
-
-    def generate_index_data(self, template: str, gen: GeneratedData) -> str:
-        data = {}
-
-        info = IndexData(self.frontmatter, self.guess)
-
-        data['index'] = run_markdown(self.content)
-
-        data['book_title'] = gen.book_title
-        data['copyright'] = gen.glob.copyright
-        data['style_css'] = make_relative(self.target, gen.style_css)
-        data['toc'] = gen.toc
-        data['first_page'] = '' if self.next_page is None else make_relative(self.target, self.next_page.target)
-
-        return pystache_render(self.source, template, data)
-
-    def write(self, templates: Templates, gen: GeneratedData):
-        generated = self.generate_index_data(templates.index, gen) if self.is_index else self.generate_chapter_data(templates.template, gen)
+        generated = pystache_render(self.source, template, data)
         write_file(generated, self.target)
 
     def generate_html_list(self, extension: str, indent: str, file: str):
-        html = indent + '<li><a href="{}">{}</a>'.format(make_relative(file, self.target), self.general.title)
-        # todo(Gustav): handle children in toc
+        html = indent + '<li><a href="{}">{}</a>'.format(make_relative(file, self.target), self.title)
         if len(self.children) > 0:
             html += '\n' + indent + '    <ul>\n'
             for c in self.children:
@@ -469,16 +443,16 @@ class Page:
 
 
 def strip_empty_start(lines: typing.Iterable[str]) -> typing.Iterable[str]:
-        empty = True
-        for li in lines:
-            if len(li.strip()) == 0:
-                if empty:
-                    pass
-                else:
-                    yield li
+    empty = True
+    for li in lines:
+        if len(li.strip()) == 0:
+            if empty:
+                pass
             else:
-                empty = False
                 yield li
+        else:
+            empty = False
+            yield li
 
 
 def strip_empty(lines: typing.List[str]) -> typing.List[str]:
@@ -490,19 +464,19 @@ def strip_empty(lines: typing.List[str]) -> typing.List[str]:
     return cleared
 
 
-def update_frontmatter(chapter_path: str, create_data, guess_arg: typing.Optional[GuessedData], extra_content: typing.Optional[str]):
+def update_frontmatter(chapter_path: str, guess_arg: typing.Optional[GuessedData], extra_content: typing.Optional[str]):
     frontmatter, content = read_frontmatter_file(chapter_path, missing_is_error=False)
     write_chapter = False
     if frontmatter is None:
         write_chapter = True
         frontmatter = {}
         guess = guess_arg or GuessedData(chapter_path)
-        chapter = create_data(frontmatter, guess)
+        chapter = ParsedFrontmatter(frontmatter, guess)
         chapter.generate(frontmatter)
     else:
         fmo = frontmatter_to_string(frontmatter)
         guess = guess_arg or GuessedData(chapter_path)
-        chapter = create_data(frontmatter, guess)
+        chapter = ParsedFrontmatter(frontmatter, guess)
         chapter.generate(frontmatter)
         if fmo != frontmatter_to_string(frontmatter):
             write_chapter = True
@@ -515,11 +489,11 @@ def update_frontmatter(chapter_path: str, create_data, guess_arg: typing.Optiona
 
 
 def update_frontmatter_chapter(chapter_path: str, guess: typing.Optional[GuessedData] = None, content: typing.Optional[str] = None):
-    update_frontmatter(chapter_path, ChapterData, guess, content)
+    update_frontmatter(chapter_path, guess, content)
 
 
 def update_frontmatter_index(chapter_path: str):
-    update_frontmatter(chapter_path, IndexData, None, '')
+    update_frontmatter(chapter_path, None, '')
 
 
 def create_page(stat: Stat, chapter: str, source_folder: str, target_folder: str, ext: str) -> Page:
@@ -528,7 +502,7 @@ def create_page(stat: Stat, chapter: str, source_folder: str, target_folder: str
     book_index_file = os.path.join(os.path.dirname(find_book_file(source_folder)), CHAPTER_INDEX)
     is_index = source == book_index_file
     is_chapter = chapter == CHAPTER_INDEX
-    return Page(stat, chapter, source, target, is_chapter, is_index)
+    return Page.from_file(stat, chapter, source, target, is_chapter)
 
 
 class Chapter:
@@ -569,14 +543,14 @@ class Chapter:
 
         for chapter in self.chapters:
             source = os.path.join(self.source_folder, chapter)
-            target = os.path.join(target_folder, change_extension(chapter, ext) if file_exist(source) else chapter)
-            if file_exist(source):
+            is_special_toc = chapter == TOC_INDEX
+            target = os.path.join(target_folder, change_extension(chapter, ext) if file_exist(source) or is_special_toc else chapter)
+            if file_exist(source) or is_special_toc:
                 is_index = source == book_index_file
                 is_chapter = chapter == CHAPTER_INDEX
-                child_page = Page(stat, chapter, source, target, is_chapter, is_index)
+                child_page = Page.from_file(stat, chapter, source, target, is_chapter) if not is_special_toc else Page(chapter, source, target, TOC_HTML_BODY, 'Table of Contents')
                 pages.append(child_page)
                 root_page.children.append(child_page)
-                # if not root_page.is_index:
                 child_page.parent = root_page
             elif folder_exist(source):
                 section_file = os.path.join(source, CHAPTER_FILE)
@@ -613,7 +587,7 @@ class Chapter:
 
             fm, _ = read_frontmatter_file(index_file)
             guess = GuessedData(index_file)
-            data = IndexData(fm, guess)
+            data = ParsedFrontmatter(fm, guess)
         else:
             update_frontmatter_chapter(index_file)
 
@@ -663,7 +637,7 @@ class Book(Chapter):
         chapter_path = os.path.join(self.source_folder, CHAPTER_INDEX)
         frontmatter, _ = read_frontmatter_file(chapter_path)
         if frontmatter is not None:
-            data = IndexData(frontmatter, GuessedData(chapter_path))
+            data = ParsedFrontmatter(frontmatter, GuessedData(chapter_path))
         for p in super().iterate_markdown_files():
             yield p
 
@@ -916,7 +890,7 @@ def handle_split_markdown(args):
 
             # create chapter index with title and remaining content
             chapter_path = os.path.join(dir_path, CHAPTER_INDEX)
-            chapter_title = GeneralData(frontmatter, GuessedData(chapter_path)).title
+            chapter_title = ParsedFrontmatter(frontmatter, GuessedData(chapter_path)).title
             update_frontmatter_chapter(chapter_path, GuessedData(chapter_path, chapter_title), update_images(from_file_path, chapter_path, remaining_content))
 
             # add split pages in sub chapter
@@ -981,7 +955,7 @@ def handle_import_markdown(args):
         title, lines = pages[0]
         frontmatter = {}
         guess = GuessedData(index_file, title)
-        data = GeneralData({}, guess)
+        data = ParsedFrontmatter({}, guess)
         data.generate(frontmatter)
         write_frontmatter_file(index_file, frontmatter, '\n'.join(lines))
 
@@ -1017,11 +991,12 @@ def handle_build(_):
     gen = GeneratedData(
         glob,
         ext,
-        book_title=root_page.general.title,
+        book_title=root_page.title,
         root=book_folder,
         toc=generate_toc([root_page] + root_page.children, ext, index_source, index_target),
         style_css=os.path.join(html, 'style.css'),
-        index_html=os.path.join(html, 'index.html')
+        index_html=os.path.join(html, 'index.html'),
+        toc_html=os.path.join(html, 'toc.html')
         )
     Page.post_generation(pages)
 
