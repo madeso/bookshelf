@@ -34,10 +34,23 @@
 
                 {{& body}}
 
-                <nav>
-                    {{#prev}}<span class="prev">&larr; <a href="{{prev}}">Previous Chapter</a></span>{{/prev}}
-                    {{#next}}<span class="next"><a href="{{next}}">Next Chapter</a> &rarr;</span>{{/next}}
-                    <span class="toc">&equiv; <a href="{{& index_html}}">The Book</a></span>
+                <nav class="bottom">
+                    <table width="100%">
+                        <tr>
+                            <td>
+                                <span class="prev">{{#prev}}<a href="{{prev}}">{{/prev}}&larr; Previous{{#prev}}</a>{{/prev}}</span>
+                            </td>
+                            <td>
+                                <span class="toc">&equiv; <a href="{{& index_html}}">The Book</a></span>
+                            </td>
+                            <td>
+                                <span class="toc"><a href="{{& toc_html}}">§ Contents</a></span>
+                            </td>
+                            <td>
+                                <span class="next">{{#next}}<a href="{{next}}">{{/next}}Next &rarr;{{#next}}</a>{{/next}}</span>
+                            </td>
+                        </tr>
+                    </table>
                 </nav>
             </div>
         </div>
