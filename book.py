@@ -773,7 +773,14 @@ def handle_add(args):
 
 
 def name_from_title(title: str) -> str:
-    return title.lower().replace(' ', '_').replace('.', '').replace('/', '-')
+    t = title
+    t = t.lower()
+    t = t.replace(' ', '_')
+    t = t.replace('.', '')
+    t = t.replace('*', '')
+    t = t.replace(':', '')
+    t = t.replace('/', '-')
+    return t
 
 
 def new_page(book: Chapter, title: str, content: str) -> bool:
@@ -800,14 +807,20 @@ def handle_new_page(args):
         book.save()
 
 
+def line_contains(line: str, on: typing.Optional[str]) -> bool:
+    if on is None:
+        return True
+    return on.lower() in line.lower()
+
+
 re_markdown_header_tag = re.compile(r'\{#[^}]+\}')
 
-def markdown_extract_pages_from_lines(file: typing.Iterable[str]) -> typing.Iterable[typing.Tuple[str, typing.List[str]]]:
+def markdown_extract_pages_from_lines(file: typing.Iterable[str], on: typing.Optional[str]=None) -> typing.Iterable[typing.Tuple[str, typing.List[str]]]:
     header = None
     lines = []
     for line_space in file:
         line = line_space.rstrip()
-        if line.startswith('# '):
+        if line.startswith('# ') and line_contains(line, on):
             if header is None:
                 lines = strip_empty(lines)
                 if len(lines) > 0:
@@ -817,7 +830,7 @@ def markdown_extract_pages_from_lines(file: typing.Iterable[str]) -> typing.Iter
             lines = []
             header = re_markdown_header_tag.sub('', line[1:].strip()).strip()
         else:
-            if line.startswith('#'):
+            if line.startswith('#') and on is None:
                 line = line[1:]
             lines.append(line)
     if header is not None:
@@ -838,12 +851,13 @@ def handle_split_markdown(args):
         return
     from_file_path = os.path.join(book.source_folder, args.file)
     frontmatter, content = read_frontmatter_file(from_file_path)
-    pages = list(markdown_extract_pages_from_lines(content.splitlines()))
+    pages = list(markdown_extract_pages_from_lines(content.splitlines(), args.on))
 
     if args.print:
         for data in pages:
             title, lines = data
-            print('{} ({})'.format(title, len(lines)))
+            file_name = name_from_title(title) + '.md' if len(title) > 0 else '<unchanged>'
+            print('{} ({}) -> {}'.format(title, len(lines), file_name))
         return
     else:
         if len(pages)==0:
@@ -888,6 +902,8 @@ def handle_split_markdown(args):
 
         sub_chapter_index = os.path.join(dir_path, CHAPTER_FILE)
         chapter = Chapter(sub_chapter_index)
+
+        # todo(Gustav): update markdowns with new image paths
 
         # create chapter index with title and remaining content
         chapter_path = os.path.join(dir_path, CHAPTER_INDEX)
@@ -1116,6 +1132,7 @@ def main():
     sub = sub_parsers.add_parser('split', help='Split a existing chapter or page to several pages or chapters')
     sub.add_argument('file')
     sub.add_argument('--print', action='store_true')
+    sub.add_argument('--on', default=None, help='extra argument in title that is required')
     sub.set_defaults(func=handle_split_markdown)
 
     sub = sub_parsers.add_parser('indent', help='indent headers so that they are no longer toplevel')
