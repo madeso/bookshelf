@@ -36,6 +36,27 @@ book build
 open html/index.html
 ```
 
+book.py also supports importing from other sources:
+
+```sh
+mkdir my-book
+cd my-book
+
+# import a hugo file https://github.com/cli-guidelines/cli-guidelines
+book import ~/dev/clig/content/_index.md
+
+# index is too big, split it, and so is the new split guidelines
+book split index.md
+book split guidelines.md
+
+# philosopy has several top level headers but each are too small for
+# seperate chapters 'indent' the headers to make it look nicer
+book indent philosphy.md
+
+book build
+open html/index.html
+```
+
 Enjoy!
 
 
