@@ -869,75 +869,77 @@ def handle_split_markdown(args):
     if book is None:
         print('This is not a book, consider using import instead')
         return
-    from_file_path = os.path.join(book.source_folder, args.file)
-    frontmatter, content = read_frontmatter_file(from_file_path)
-    pages = list(markdown_extract_pages_from_lines(content.splitlines(), args.on))
 
-    if args.print:
-        for data in pages:
-            title, lines = data
-            file_name = name_from_title(title) + '.md' if len(title) > 0 else '<unchanged>'
-            print('{} ({}) -> {}'.format(title, len(lines), file_name))
-        return
-    else:
-        if len(pages)==0:
-            print('Zero pages found.')
+    for args_file in args.files:
+        from_file_path = os.path.join(book.source_folder, args_file)
+        frontmatter, content = read_frontmatter_file(from_file_path)
+        pages = list(markdown_extract_pages_from_lines(content.splitlines(), args.on))
+
+        if args.print:
+            for data in pages:
+                title, lines = data
+                file_name = name_from_title(title) + '.md' if len(title) > 0 else '<unchanged>'
+                print('{} ({}) -> {}'.format(title, len(lines), file_name))
+            return
+        else:
+            if len(pages)==0:
+                print('Zero pages found.')
+                return
+
+        remaining_content = ''
+        first_title, first_content = pages[0]
+        if len(first_title.strip()) == 0:
+            remaining_content = '\n'.join(first_content)
+            pages = pages[1:]
+
+        if len(pages) == 0:
+            print('Only titme page found... aborting')
             return
 
-    remaining_content = ''
-    first_title, first_content = pages[0]
-    if len(first_title.strip()) == 0:
-        remaining_content = '\n'.join(first_content)
-        pages = pages[1:]
+        if args_file == CHAPTER_INDEX:
+            write_frontmatter_file(from_file_path, frontmatter, remaining_content)
+            for data in pages:
+                title, lines = data
+                new_page(book, title, '\n'.join(lines))
 
-    if len(pages) == 0:
-        print('Only titme page found... aborting')
-        return
+            book.save()
+        else:
+            if args_file not in book.chapters:
+                print('This is not a page in a chapter!')
+                return
 
-    if args.file == CHAPTER_INDEX:
-        write_frontmatter_file(from_file_path, frontmatter, remaining_content)
-        for data in pages:
-            title, lines = data
-            new_page(book, title, '\n'.join(lines))
+            print('hello')
 
-        book.save()
-    else:
-        if args.file not in book.chapters:
-            print('This is not a page in a chapter!')
-            return
+            original_page_file = os.path.join(book.source_folder, args_file)
+            dir_name = os.path.splitext(args_file)[0]
+            dir_path = os.path.join(book.source_folder, dir_name)
 
-        print('hello')
+            # replace page with chapter in book
+            book.chapters = [dir_name if chap==args_file else chap for chap in book.chapters]
 
-        original_page_file = os.path.join(book.source_folder, args.file)
-        dir_name = os.path.splitext(args.file)[0]
-        dir_path = os.path.join(book.source_folder, dir_name)
+            # remove original page
+            os.unlink(original_page_file)
 
-        # replace page with chapter in book
-        book.chapters = [dir_name if chap==args.file else chap for chap in book.chapters]
+            # create chapter directory
+            if not os.path.isdir(dir_path):
+                os.mkdir(dir_path)
 
-        # remove original page
-        os.unlink(original_page_file)
+            sub_chapter_index = os.path.join(dir_path, CHAPTER_FILE)
+            chapter = Chapter(sub_chapter_index)
 
-        # create chapter directory
-        if not os.path.isdir(dir_path):
-            os.mkdir(dir_path)
+            # create chapter index with title and remaining content
+            chapter_path = os.path.join(dir_path, CHAPTER_INDEX)
+            chapter_title = GeneralData(frontmatter, GuessedData(chapter_path)).title
+            update_frontmatter_chapter(chapter_path, GuessedData(chapter_path, chapter_title), update_images(from_file_path, chapter_path, remaining_content))
 
-        sub_chapter_index = os.path.join(dir_path, CHAPTER_FILE)
-        chapter = Chapter(sub_chapter_index)
+            # add split pages in sub chapter
+            for data in pages:
+                title, lines = data
+                page_file = os.path.join(chapter.source_folder, name_from_title(title) + '.md')
+                new_page(chapter, title, update_images(from_file_path, page_file, '\n'.join(lines)))
 
-        # create chapter index with title and remaining content
-        chapter_path = os.path.join(dir_path, CHAPTER_INDEX)
-        chapter_title = GeneralData(frontmatter, GuessedData(chapter_path)).title
-        update_frontmatter_chapter(chapter_path, GuessedData(chapter_path, chapter_title), update_images(from_file_path, chapter_path, remaining_content))
-
-        # add split pages in sub chapter
-        for data in pages:
-            title, lines = data
-            page_file = os.path.join(chapter.source_folder, name_from_title(title) + '.md')
-            new_page(chapter, title, update_images(from_file_path, page_file, '\n'.join(lines)))
-
-        chapter.save()
-        book.save()
+            chapter.save()
+            book.save()
 
 
 def handle_indent_markdown(args):
@@ -946,23 +948,24 @@ def handle_indent_markdown(args):
     if book is None:
         print('This is not a book, consider using import instead')
         return
-    from_file_path = os.path.join(book.source_folder, args.file)
-    frontmatter, content = read_frontmatter_file(from_file_path)
-    pages = list(markdown_extract_pages_from_lines(content.splitlines()))
+    for args_file in args.files:
+        from_file_path = os.path.join(book.source_folder, args_file)
+        frontmatter, content = read_frontmatter_file(from_file_path)
+        pages = list(markdown_extract_pages_from_lines(content.splitlines()))
 
-    if args.print:
-        for data in pages:
-            title, lines = data
-            print('{} ({})'.format(title, len(lines)))
-        return
-    if len(pages)==0:
-        print('Zero pages found.')
-        return
+        if args.print:
+            for data in pages:
+                title, lines = data
+                print('{} ({})'.format(title, len(lines)))
+            return
+        if len(pages)==0:
+            print('Zero pages found.')
+            return
 
-    lines = content.splitlines()
-    newlines = ['#' + line if line.startswith('#') else line for line in lines]
+        lines = content.splitlines()
+        newlines = ['#' + line if line.startswith('#') else line for line in lines]
 
-    write_frontmatter_file(from_file_path, frontmatter, '\n'.join(newlines))
+        write_frontmatter_file(from_file_path, frontmatter, '\n'.join(newlines))
 
 
 def handle_import_markdown(args):
@@ -1150,13 +1153,13 @@ def main():
     sub.set_defaults(func=handle_import_markdown)
 
     sub = sub_parsers.add_parser('split', help='Split a existing chapter or page to several pages or chapters')
-    sub.add_argument('file')
+    sub.add_argument('files', nargs='+', metavar='file')
     sub.add_argument('--print', action='store_true')
     sub.add_argument('--on', default=None, help='extra argument in title that is required')
     sub.set_defaults(func=handle_split_markdown)
 
     sub = sub_parsers.add_parser('indent', help='indent headers so that they are no longer toplevel')
-    sub.add_argument('file')
+    sub.add_argument('files', nargs='+', metavar='file')
     sub.add_argument('--print', action='store_true')
     sub.set_defaults(func=handle_indent_markdown)
 
