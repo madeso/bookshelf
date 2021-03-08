@@ -49,8 +49,8 @@ book import ~/dev/clig/content/_index.md
 book split index.md
 book split guidelines.md
 
-# philosopy has several top level headers but each are too small for
-# seperate chapters. 'indent' the headers to make it look nicer
+# philosopy has several top level headers but each section is too small to
+# justify seperate chapters. 'indent' the headers to make it look nicer
 book indent philosphy.md
 
 book build
