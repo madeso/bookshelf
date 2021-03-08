@@ -141,15 +141,18 @@ def touch_file(path: str):
 
 
 re_subscript = re.compile(r'\[([^\]]+)\]\{\.subscript\}')
+re_superscript = re.compile(r'\[([^\]]+)\]\{\.superscript\}')
 
-def math_to_html(content: str) -> str:
+def math_to_html(content: str, regex, html: str) -> str:
     def replce_math(match):
         thing = match.group(1)
-        return '<sub>{}</sub>'.format(thing)
-    return re_subscript.sub(replce_math, content)
+        return '<{}>{}</{}>'.format(html, thing, html)
+    return regex.sub(replce_math, content)
 
 def run_markdown(contents: str):
-    cc = math_to_html(contents)
+    cc = contents
+    cc = math_to_html(cc, re_subscript, 'sub')
+    cc = math_to_html(cc, re_superscript, 'sup')
     body = markdown.markdown(cc, extensions=['extra', 'def_list', 'codehilite'])
     body = body.replace('<aside markdown="1"', '<aside')
     return body
