@@ -265,7 +265,9 @@ def replace_image_in_markdown(md: str, path: str, replacements: typing.Dict[str,
         orig_url = match.group(re_image_url)
         if orig_url in replacements:
             new_url = make_relative(path, replacements[orig_url])
-            return '![{}]({})'.format(alt_text, new_url)
+            new_image = '![{}]({})'.format(alt_text, new_url)
+            print('{} -> {}'.format(orig, new_image))
+            return new_image
         else:
             return orig
     return re_image.sub(replace_image_with_replacement, md)
@@ -779,6 +781,8 @@ def name_from_title(title: str) -> str:
     t = t.replace('.', '')
     t = t.replace('*', '')
     t = t.replace(':', '')
+    t = t.replace('(', '')
+    t = t.replace(')', '')
     t = t.replace('/', '-')
     return t
 
@@ -843,6 +847,22 @@ def markdown_extract_pages_from_file(path: str) -> typing.Iterable[typing.Tuple[
         return markdown_extract_pages_from_lines(lines)
 
 
+def update_images(from_path: str, to_path: str, md: str) -> str:
+    from_folder = os.path.dirname(from_path)
+    replacements = {}
+    for image in list_images_in_markdown(md):
+        image_path = os.path.join(from_folder, image)
+        if file_exist(image_path):
+            # new_image = make_relative(to_path, image_path)
+            replacements[image] = image_path
+            # print('replacing {} with {}'.format(image, new_image))
+        else:
+            print('WARNING: ignoring missing image ', image_path)
+
+    # print("   replaced {} images".format(len(replacements)))
+    return replace_image_in_markdown(md, to_path, replacements)
+
+
 def handle_split_markdown(args):
     root = os.getcwd()
     book = get_book_or_chapter(root)
@@ -886,6 +906,8 @@ def handle_split_markdown(args):
             print('This is not a page in a chapter!')
             return
 
+        print('hello')
+
         original_page_file = os.path.join(book.source_folder, args.file)
         dir_name = os.path.splitext(args.file)[0]
         dir_path = os.path.join(book.source_folder, dir_name)
@@ -903,22 +925,19 @@ def handle_split_markdown(args):
         sub_chapter_index = os.path.join(dir_path, CHAPTER_FILE)
         chapter = Chapter(sub_chapter_index)
 
-        # todo(Gustav): update markdowns with new image paths
-
         # create chapter index with title and remaining content
         chapter_path = os.path.join(dir_path, CHAPTER_INDEX)
         chapter_title = GeneralData(frontmatter, GuessedData(chapter_path)).title
-        update_frontmatter_chapter(chapter_path, GuessedData(chapter_path, chapter_title), remaining_content)
+        update_frontmatter_chapter(chapter_path, GuessedData(chapter_path, chapter_title), update_images(from_file_path, chapter_path, remaining_content))
 
         # add split pages in sub chapter
         for data in pages:
             title, lines = data
-            new_page(chapter, title, '\n'.join(lines))
+            page_file = os.path.join(chapter.source_folder, name_from_title(title) + '.md')
+            new_page(chapter, title, update_images(from_file_path, page_file, '\n'.join(lines)))
 
         chapter.save()
         book.save()
-
-
 
 
 def handle_indent_markdown(args):
@@ -1029,10 +1048,11 @@ def handle_build(_):
             if url.scheme == '':
                 # image_name = os.path.basename(url.path)
                 image_name = url.path
-                source_path = os.path.join(markdown_folder, image_name)
-                target_path = os.path.realpath(os.path.join(html, relative, image_name))
+                source_path = os.path.normpath(os.path.join(markdown_folder, image_name))
+                target_path = os.path.normpath(os.path.realpath(os.path.join(html, relative, image_name)))
                 os.makedirs(os.path.dirname(target_path), exist_ok=True)
-                print('Copying {}'.format(image_name))
+                # print('Copying {} -> {}'.format(source_path, target_path))
+                print('Copying {}'.format(os.path.basename(target_path)))
                 shutil.copyfile(source_path, target_path)
 
     # generate
