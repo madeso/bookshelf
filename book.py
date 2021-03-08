@@ -1011,9 +1011,11 @@ def handle_build(_):
         for image in list_images_in_markdown(content):
             url = urllib.parse.urlparse(image)
             if url.scheme == '':
-                image_name = os.path.basename(url.path)
+                # image_name = os.path.basename(url.path)
+                image_name = url.path
                 source_path = os.path.join(markdown_folder, image_name)
                 target_path = os.path.realpath(os.path.join(html, relative, image_name))
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
                 print('Copying {}'.format(image_name))
                 shutil.copyfile(source_path, target_path)
 
