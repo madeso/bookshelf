@@ -2,14 +2,13 @@
 # Converts from the source markup format to HTML for the web version.
 
 
+# todo(Gustav): support epub
 # todo(Gustav): fix and validate internal links
 # todo(Gustav): html in page title when title is markdowned
-# todo(Gustav): fix title indentation and # removal when splitting to only work on titles '#'*3<space>
-# todo(Gustav): commands to move and merge markdowns
+# todo(Gustav): commands to move markdowns/pages between folders/chapters
 # todo(Gustav): add graphviz image generation
 # todo(Gustav): add watcher (with auto refresh like hugo)
 # todo(Gustav): action change image format and make black-white and dithering
-# todo(Gustav): support epub
 
 ###################################################################################################
 # Imports
