@@ -733,6 +733,32 @@ def get_book_or_chapter(root: str) -> typing.Optional[Chapter]:
     else:
         return book
 
+def handle_remove(args):
+    book = get_book_or_chapter(os.getcwd())
+    if book is None:
+        return
+
+    changed = False
+    for chapter in args.chapters:
+        chapter_path = os.path.join(book.source_folder, chapter)
+
+        if chapter not in book.chapters:
+            print('Unable to find {} in book'.format(chapter))
+            return
+
+        s = len(book.chapters)
+        book.chapters.remove(chapter)
+        if len(book.chapters) != s:
+            changed = True
+            print('Removed {}'.format(chapter))
+
+        if file_exist(chapter_path):
+            os.remove(chapter_path)
+        elif folder_exist(chapter_path):
+            shutil.rmtree(chapter_path, ignore_errors=True)
+
+    if changed:
+        book.save()
 
 def handle_add(args):
     book = get_book_or_chapter(os.getcwd())
@@ -1150,6 +1176,10 @@ def main():
     sub = sub_parsers.add_parser('add', help='Add a existing page or chapter to a book')
     sub.add_argument('chapters', nargs='+', metavar='chapter')
     sub.set_defaults(func=handle_add)
+
+    sub = sub_parsers.add_parser('rm', help='Remove existing page or chapter')
+    sub.add_argument('chapters', nargs='+', metavar='chapter')
+    sub.set_defaults(func=handle_remove)
 
     sub = sub_parsers.add_parser('new', help='Add a new page to a book')
     sub.add_argument('pages', nargs='+', metavar='page')
