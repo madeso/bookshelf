@@ -28,9 +28,11 @@
                         </tr>
                     </table>
                 </nav>
-                <h1>{{& header}}</h1>
 
+                {{#no_title_page}}
+                <h1>{{& header}}</h1>
                 <h1 class="book"><a href="{{& index_html}}">{{book_title}}</a>{{#section_headers}}<span class="section"><a href="{{&href}}">{{& title}}</a></span>{{/section_headers}}</h1>
+                {{/no_title_page}}
 
                 {{& body}}
 

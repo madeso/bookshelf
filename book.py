@@ -439,6 +439,7 @@ class Page:
         next_page = '' if self.next_page is None else make_relative(self.target, self.next_page.target)
 
         data['body'] = gen.toc if self.html_body == TOC_HTML_BODY else self.html_body
+        data['no_title_page'] = self.title != "Colophon"
         data['title'] = self.title
         data['titles'] = titles
         data['section_headers'] = section_headers
@@ -732,6 +733,7 @@ def get_book_or_chapter(root: str) -> typing.Optional[Chapter]:
         return None
     else:
         return book
+
 
 def handle_remove(args):
     book = get_book_or_chapter(os.getcwd())
