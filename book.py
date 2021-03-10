@@ -818,6 +818,7 @@ def line_contains(line: str, on: typing.Optional[str]) -> bool:
     return on.lower() in line.lower()
 
 
+re_markdown_header = re.compile(r'^#[^#]* ')
 re_markdown_header_tag = re.compile(r'\{#[^}]+\}')
 
 def markdown_extract_pages_from_lines(file: typing.Iterable[str], on: typing.Optional[str]=None) -> typing.Iterable[typing.Tuple[str, typing.List[str]]]:
@@ -835,7 +836,7 @@ def markdown_extract_pages_from_lines(file: typing.Iterable[str], on: typing.Opt
             lines = []
             header = re_markdown_header_tag.sub('', line[1:].strip()).strip()
         else:
-            if line.startswith('#') and on is None:
+            if re_markdown_header.match(line) is not None and on is None:
                 line = line[1:]
             lines.append(line)
     if header is not None:
