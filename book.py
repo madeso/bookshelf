@@ -773,6 +773,35 @@ def handle_reorder(args):
     if changed:
         book.save()
 
+
+def handle_move(args):
+    book = get_book_or_chapter(args.destination)
+    if book is None:
+        return
+
+    changed = False
+    for relative_chapter in args.chapters:
+        path = os.path.realpath(relative_chapter)
+        folder = os.path.dirname(path)
+        chapter = os.path.split(path)[1]
+        chapter_book = get_book_or_chapter(folder)
+        if chapter not in chapter_book.chapters:
+            print('Unable to find {} in book {}'.format(chapter, folder))
+            return
+
+        fm, content = read_frontmatter_file(path)
+        os.remove(path)
+
+        new_path = os.path.join(args.destination, chapter)
+        content = update_images(path, new_path, content)
+        write_frontmatter_file(new_path, fm, content)
+
+        book.chapters.append(chapter)
+        changed = True
+
+    if changed:
+        book.save()
+
 def handle_remove(args):
     book = get_book_or_chapter(os.getcwd())
     if book is None:
@@ -1228,6 +1257,11 @@ def main():
     sub.add_argument('where', choices=[REORDER_LAST, REORDER_AFTER_TOC])
     sub.add_argument('chapters', nargs='+', metavar='chapter')
     sub.set_defaults(func=handle_reorder)
+
+    sub = sub_parsers.add_parser('move', help='Move pages or chapters in current book')
+    sub.add_argument('--destination', default=os.getcwd())
+    sub.add_argument('chapters', nargs='+', metavar='chapter')
+    sub.set_defaults(func=handle_move)
 
     sub = sub_parsers.add_parser('split', help='Split a existing chapter or page to several pages or chapters')
     sub.add_argument('files', nargs='+', metavar='file')
