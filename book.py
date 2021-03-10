@@ -735,6 +735,45 @@ def get_book_or_chapter(root: str) -> typing.Optional[Chapter]:
         return book
 
 
+REORDER_LAST = "last"
+REORDER_AFTER_TOC = "after_toc"
+
+def handle_reorder(args):
+    where = args.where
+    book = get_book_or_chapter(os.getcwd())
+    if book is None:
+        return
+
+    changed = False
+    if where == REORDER_AFTER_TOC:
+        args.chapters.reverse()
+    for chapter in args.chapters:
+        if chapter not in book.chapters:
+            print('Unable to find {} in book'.format(chapter))
+            return
+
+        s = len(book.chapters)
+        book.chapters.remove(chapter)
+        if len(book.chapters) != s:
+            changed = True
+
+        if where == REORDER_LAST:
+            book.chapters.append(chapter)
+        elif where == REORDER_AFTER_TOC:
+            if TOC_INDEX in book.chapters:
+                toc = book.chapters.index(TOC_INDEX)
+                book.chapters.insert(toc+1, chapter)
+            else:
+                print('missing toc, adding last')
+                book.chapters.add(chapter)
+        else:
+            print('Unknown action, adding last')
+            book.chapters.add(chapter)
+
+
+    if changed:
+        book.save()
+
 def handle_remove(args):
     book = get_book_or_chapter(os.getcwd())
     if book is None:
@@ -1195,6 +1234,11 @@ def main():
     sub.add_argument('file')
     sub.add_argument('--print', action='store_true')
     sub.set_defaults(func=handle_import_markdown)
+
+    sub = sub_parsers.add_parser('reorder', help='Reorder pages or chapters in current book')
+    sub.add_argument('where', choices=[REORDER_LAST, REORDER_AFTER_TOC])
+    sub.add_argument('chapters', nargs='+', metavar='chapter')
+    sub.set_defaults(func=handle_reorder)
 
     sub = sub_parsers.add_parser('split', help='Split a existing chapter or page to several pages or chapters')
     sub.add_argument('files', nargs='+', metavar='file')
