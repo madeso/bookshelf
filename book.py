@@ -736,6 +736,7 @@ def get_book_or_chapter(root: str) -> typing.Optional[Chapter]:
 
 REORDER_LAST = "last"
 REORDER_AFTER_TOC = "after_toc"
+REORDER_BEFORE_TOC = "before_toc"
 
 def handle_reorder(args):
     where = args.where
@@ -762,6 +763,13 @@ def handle_reorder(args):
             if TOC_INDEX in book.chapters:
                 toc = book.chapters.index(TOC_INDEX)
                 book.chapters.insert(toc+1, chapter)
+            else:
+                print('missing toc, adding last')
+                book.chapters.add(chapter)
+        elif where == REORDER_BEFORE_TOC:
+            if TOC_INDEX in book.chapters:
+                toc = book.chapters.index(TOC_INDEX)
+                book.chapters.insert(toc, chapter)
             else:
                 print('missing toc, adding last')
                 book.chapters.add(chapter)
@@ -1254,7 +1262,7 @@ def main():
     sub.set_defaults(func=handle_import_markdown)
 
     sub = sub_parsers.add_parser('reorder', help='Reorder pages or chapters in current book')
-    sub.add_argument('where', choices=[REORDER_LAST, REORDER_AFTER_TOC])
+    sub.add_argument('where', choices=[REORDER_LAST, REORDER_BEFORE_TOC, REORDER_AFTER_TOC])
     sub.add_argument('chapters', nargs='+', metavar='chapter')
     sub.set_defaults(func=handle_reorder)
 
