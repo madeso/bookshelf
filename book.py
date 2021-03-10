@@ -860,7 +860,9 @@ def markdown_extract_pages_from_lines(file: typing.Iterable[str], on: typing.Opt
                 if len(lines) > 0:
                     yield ('', lines)
             else:
-                yield (header, strip_empty(lines))
+                stripped = strip_empty(lines)
+                if len(stripped) != 0:
+                    yield (header, stripped)
             lines = []
             header = re_markdown_header_tag.sub('', line[1:].strip()).strip()
         else:
@@ -868,7 +870,9 @@ def markdown_extract_pages_from_lines(file: typing.Iterable[str], on: typing.Opt
                 line = line[1:]
             lines.append(line)
     if header is not None:
-        yield(header, strip_empty(lines))
+        stripped = strip_empty(lines)
+        if len(stripped) != 0:
+            yield (header, stripped)
 
 
 def markdown_extract_pages_from_file(path: str) -> typing.Iterable[typing.Tuple[str, typing.List[str]]]:
