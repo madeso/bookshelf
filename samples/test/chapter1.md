@@ -1,4 +1,4 @@
-title = "1. Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+title = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
 +++
 Ut iaculis blandit lacus sed sodales. Curabitur eu elementum arcu. Curabitur sed consectetur lorem, vitae tristique ligula. Nulla at ornare ex. Praesent eu dolor tincidunt, laoreet leo nec, sagittis nisl. Aenean quis libero eu mi dictum semper nec vel justo. Integer placerat vulputate ipsum a molestie. Duis a rutrum purus. Ut nunc ex, dictum eu velit vitae, facilisis tempus justo. Proin vitae nisl semper, viverra sapien pharetra, consectetur turpis. Ut placerat dapibus consequat. Donec pharetra dui eget est tincidunt maximus ut quis libero. Proin vitae mollis mauris. In viverra fringilla ipsum a accumsan.
 

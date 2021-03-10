@@ -1,9 +1,13 @@
 {
     "chapter": {
         "chapters": [
+            "toc.md",
+            "preface.md",
+            "introduction.md",
             "chapter1.md",
             "chapter2.md",
-            "section"
+            "section",
+            "author.md"
         ]
     },
     "copyright": "lipsum.com"
