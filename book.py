@@ -1028,21 +1028,11 @@ def handle_indent_markdown(args):
     for args_file in args.files:
         from_file_path = os.path.join(book.source_folder, args_file)
         frontmatter, content = read_frontmatter_file(from_file_path)
-        pages = list(markdown_extract_pages_from_lines(content.splitlines()))
-
-        if args.print:
-            for data in pages:
-                title, lines = data
-                print('{} ({})'.format(title, len(lines)))
-            return
-        if len(pages)==0:
-            print('Zero pages found.')
-            return
 
         lines = content.splitlines()
-        newlines = ['#' + line if line.startswith('#') else line for line in lines]
-
-        write_frontmatter_file(from_file_path, frontmatter, '\n'.join(newlines))
+        if any(line.startswith('# ') for line in lines):
+            newlines = ['#' + line if re_markdown_header.match(line) is not None else line for line in lines]
+            write_frontmatter_file(from_file_path, frontmatter, '\n'.join(newlines))
 
 
 def handle_import_markdown(args):
@@ -1247,7 +1237,6 @@ def main():
 
     sub = sub_parsers.add_parser('indent', help='indent headers so that they are no longer toplevel')
     sub.add_argument('files', nargs='+', metavar='file')
-    sub.add_argument('--print', action='store_true')
     sub.set_defaults(func=handle_indent_markdown)
 
     sub = sub_parsers.add_parser('build', help='Generate html')
