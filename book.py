@@ -22,6 +22,7 @@ import re
 import urllib
 import urllib.request
 import shutil
+import logging
 # import subprocess
 
 # non-standard dependencies
@@ -37,6 +38,9 @@ import colorama
 from colorama import Fore, Style
 colorama.init(strip=True)
 
+
+logging.basicConfig(level=logging.WARNING, format="%(msg)s")
+LOG = logging.getLogger('logtest')
 
 ###################################################################################################
 # Constants
@@ -81,7 +85,7 @@ def folder_exist(file: str) -> bool:
 
 
 def read_file(path: str) -> str:
-    # print('reading ' + path)
+    LOG.debug(f'reading {path}')
     with open(path, 'r', encoding='utf-8') as input_file:
         return input_file.read()
 
@@ -107,7 +111,7 @@ def read_frontmatter_file(path: str, missing_is_error: bool = True) -> typing.Tu
             try:
                 frontmatter = toml.loads(''.join(first))
             except toml.decoder.TomlDecodeError as e:
-                print(path, e)
+                LOG.error(f"Parse error: {path}: {e}")
             return (frontmatter, ''.join(second))
         else:
             return (None, ''.join(first))
@@ -121,7 +125,7 @@ def frontmatter_to_string(frontmatter:typing.Optional[typing.Any]) -> str:
 
 
 def write_frontmatter_file(path: str, frontmatter:typing.Optional[typing.Any], content:str):
-    print('Writing ' + path)
+    LOG.debug(f'Writing {path}')
     directory = os.path.dirname(path)
     os.makedirs(directory, exist_ok=True)
     with open(path, 'w', encoding='utf-8') as file_handle:
@@ -132,7 +136,7 @@ def write_frontmatter_file(path: str, frontmatter:typing.Optional[typing.Any], c
 
 
 def write_file(contents: str, path: str) -> str:
-    print('Writing ' + path)
+    LOG.debug(f'Writing {path}')
     directory = os.path.dirname(path)
     os.makedirs(directory, exist_ok=True)
     with open(path, 'w', encoding='utf-8') as file_handle:
@@ -194,7 +198,7 @@ def pystache_render(filename, template, data):
     try:
         return renderer.render(template, data)
     except pystache.context.KeyNotFoundError as e:
-        print(filename, 'ERROR:', e)
+        LOG.debug(f'{filename}: {e}')
         return ''
 
 def parent_folder(folder: str) -> str:
@@ -286,7 +290,7 @@ def replace_image_in_markdown(md: str, path: str, replacements: typing.Dict[str,
         if orig_url in replacements:
             new_url = make_relative(path, replacements[orig_url])
             new_image = '![{}]({})'.format(alt_text, new_url)
-            print('{} -> {}'.format(orig, new_image))
+            LOG.debug(f'replacing image {orig} -> {new_image}')
             return new_image
         else:
             return orig
@@ -315,16 +319,16 @@ class Stat:
             self.num_chapters += 1
             if word_count < 50:
                 self.empty_chapters += 1
-                print("    {}".format(name))
+                LOG.info(f"    {name}")
             elif word_count < 2000:
                 self.empty_chapters += 1
-                print("{}-{} {} ({} words)".format(Fore.YELLOW, Style.RESET_ALL, name, word_count))
+                LOG.info(f"{Fore.YELLOW}-{Style.RESET_ALL} {name} ({word_count} words)")
             else:
                 self.total_words += word_count
-                print("{}✓{} {} ({} words)".format(Fore.GREEN, Style.RESET_ALL, name, word_count))
+                LOG.info(f"{Fore.GREEN}✓{Style.RESET_ALL} {name} ({word_count} words)")
         else:
             # Section header chapters aren't counted like regular chapters.
-            print("{}•{} {} ({} words)".format(Fore.GREEN, Style.RESET_ALL, name, word_count))
+            LOG.info(f"{Fore.GREEN}•{Style.RESET_ALL} {name} ({word_count} words)")
 
     def print_estimate(self):
         valid_chapters = self.num_chapters - self.empty_chapters
@@ -332,7 +336,7 @@ class Stat:
         estimated_word_count = self.total_words + (self.empty_chapters * average_word_count)
         percent_finished = self.total_words * 100 / estimated_word_count if estimated_word_count > 0 else 0
 
-        print("{}/~{} words ({}%)".format(self.total_words, estimated_word_count, percent_finished))
+        LOG.info(f"{self.total_words}/~{estimated_word_count} words ({percent_finished}%)")
 
 
 class GlobalData:
@@ -364,7 +368,6 @@ class GuessedData:
                 base = os.path.basename(parent)
                 self.title = base
             else:
-                print(base)
                 self.title = os.path.splitext(base)[0]
 
 
@@ -559,8 +562,9 @@ class Chapter:
         return book
 
     def generate_pages(self, target_folder: str, ext: str, stat: Stat, pages: typing.List[Page]) -> Page:
-        if not file_exist(os.path.join(self.source_folder, CHAPTER_INDEX)):
-            print('error: missing chapter index')
+        chapter_index_file = os.path.join(self.source_folder, CHAPTER_INDEX)
+        if not file_exist(chapter_index_file):
+            LOG.error(f'{chapter_index_file}: file not found')
 
         root_page = create_page(stat, CHAPTER_INDEX, self.source_folder, target_folder, ext)
         pages.append(root_page)
@@ -587,9 +591,9 @@ class Chapter:
                     root_page.children.append(child_page)
                     child_page.parent = root_page
                 else:
-                    print('ERROR: missing chapter file {}'.format(section_file))
+                    LOG.error(f'{section_file} missing file')
             else:
-                print('Neither file nor folder: {}'.format(source))
+                LOG.error(f'{source}: Neither file nor folder')
 
         return root_page
 
@@ -696,7 +700,7 @@ def handle_init(args):
     path = find_book_file(root)
     if path is not None:
         if not args.update:
-            print('Book is already defined in {}'.format(path))
+            LOG.error(f'Book is already defined in {path}')
             return
         book = Book.load(path)
         book.update_frontmatters()
@@ -705,7 +709,7 @@ def handle_init(args):
         book = Book(path)
         book.save()
         book.update_frontmatters()
-        print('Created book!')
+        LOG.info('Created book!')
 
 
 def get_book_or_chapter(root: str) -> typing.Optional[Chapter]:
@@ -718,17 +722,16 @@ def get_book_or_chapter(root: str) -> typing.Optional[Chapter]:
                 path = p
                 book = Chapter.load(path)
             else:
-                print('Missing {}'.format(p))
-                print('This is not a chapter folder!')
+                LOG.error(f'{p}: Missing file. This is not a valid chapter folder!')
                 return None
         else:
-            print('This is not a book!')
+            LOG.error('This is not a book!')
             return None
     else:
         book = Book.load(path)
 
     if book is None:
-        print('BUG: Book is None')
+        LOG.debug('BUG: Book is None')
         return None
     else:
         return book
@@ -749,7 +752,7 @@ def handle_reorder(args):
         args.chapters.reverse()
     for chapter in args.chapters:
         if chapter not in book.chapters:
-            print('Unable to find {} in book'.format(chapter))
+            LOG.error(f'Unable to find {chapter} in book')
             return
 
         s = len(book.chapters)
@@ -764,17 +767,17 @@ def handle_reorder(args):
                 toc = book.chapters.index(TOC_INDEX)
                 book.chapters.insert(toc+1, chapter)
             else:
-                print('missing toc, adding last')
+                LOG.info('missing toc, adding last')
                 book.chapters.add(chapter)
         elif where == REORDER_BEFORE_TOC:
             if TOC_INDEX in book.chapters:
                 toc = book.chapters.index(TOC_INDEX)
                 book.chapters.insert(toc, chapter)
             else:
-                print('missing toc, adding last')
+                LOG.info('missing toc, adding last')
                 book.chapters.add(chapter)
         else:
-            print('Unknown action, adding last')
+            LOG.error('Unknown action, adding last')
             book.chapters.add(chapter)
 
 
@@ -794,7 +797,7 @@ def handle_move(args):
         chapter = os.path.split(path)[1]
         chapter_book = get_book_or_chapter(folder)
         if chapter not in chapter_book.chapters:
-            print('Unable to find {} in book {}'.format(chapter, folder))
+            LOG.error(f'Unable to find {chapter} in book {folder}')
             return
 
         fm, content = read_frontmatter_file(path)
@@ -820,14 +823,14 @@ def handle_remove(args):
         chapter_path = os.path.join(book.source_folder, chapter)
 
         if chapter not in book.chapters:
-            print('Unable to find {} in book'.format(chapter))
+            LOG.error(f'Unable to find {chapter} in book')
             return
 
         s = len(book.chapters)
         book.chapters.remove(chapter)
         if len(book.chapters) != s:
             changed = True
-            print('Removed {}'.format(chapter))
+            LOG.info(f'Removed {chapter}')
 
         if file_exist(chapter_path):
             os.remove(chapter_path)
@@ -849,10 +852,10 @@ def handle_add(args):
         chapter_path = os.path.join(book.source_folder, chapter)
         if file_exist(chapter_path):
             if chapter_path == index_source:
-                print('{} evaluates to the index file, this is always added, so ignoring...'.format(chapter))
+                LOG.info(f'{chapter} evaluates to the index file, this is always added, so ignoring...')
                 continue
             book.add_chapter(chapter)
-            print("Adding {}".format(chapter))
+            LOG.info(f"Adding {chapter}")
 
             update_frontmatter_chapter(chapter_path)
 
@@ -861,16 +864,16 @@ def handle_add(args):
             index_path = os.path.join(chapter_path, CHAPTER_INDEX)
             section_path = os.path.join(chapter_path, CHAPTER_FILE)
             if file_exist(section_path):
-                print('Existing section {} already added'.format(chapter))
+                LOG.error(f'Existing section {chapter} already added')
             else:
-                print("Adding section {}".format(chapter))
+                LOG.info(f"Adding section {chapter}")
                 chap = Chapter(section_path)
                 chap.save()
                 update_frontmatter_chapter(index_path)
                 book.add_chapter(chapter)
                 changed = True
         else:
-            print("File '{}' doesn't exist".format(chapter_path))
+            LOG.error(f"File '{chapter_path}' doesn't exist")
 
     if changed:
         book.save()
@@ -895,7 +898,7 @@ def new_page(book: Chapter, title: str, content: str, add_at_start: bool = False
     chapter = name_from_title(title) + '.md'
     chapter_path = os.path.join(book.source_folder, chapter)
     if file_exist(chapter_path):
-        print('{} already exists, so ignoring...'.format(chapter))
+        LOG.info(f'{chapter} already exists, so ignoring...')
         return False
     book.add_chapter(chapter, add_at_start)
     update_frontmatter_chapter(chapter_path, GuessedData(source=chapter_path, title=title), content=content)
@@ -964,11 +967,11 @@ def update_images(from_path: str, to_path: str, md: str) -> str:
         if file_exist(image_path):
             # new_image = make_relative(to_path, image_path)
             replacements[image] = image_path
-            # print('replacing {} with {}'.format(image, new_image))
+            LOG.debug(f'replacing {image} with {image_path}')
         else:
-            print('WARNING: ignoring missing image ', image_path)
+            LOG.warning(f'WARNING: ignoring missing image {image_path}')
 
-    # print("   replaced {} images".format(len(replacements)))
+    LOG.debug(f"   replaced {len(replacements)} images")
     return replace_image_in_markdown(md, to_path, replacements)
 
 
@@ -976,7 +979,7 @@ def handle_split_markdown(args):
     root = os.getcwd()
     book = get_book_or_chapter(root)
     if book is None:
-        print('This is not a book, consider using import instead')
+        LOG.error('This is not a book, consider using import instead')
         return
 
     book_has_only_toc = len(book.chapters) == 1 and TOC_INDEX in book.chapters
@@ -990,11 +993,11 @@ def handle_split_markdown(args):
             for data in pages:
                 title, lines = data
                 file_name = name_from_title(title) + '.md' if len(title) > 0 else '<unchanged>'
-                print('{} ({}) -> {}'.format(title, len(lines), file_name))
+                LOG.info(f'{title} ({len(lines)}) -> {file_name}')
             return
         else:
             if len(pages)==0:
-                print('Zero pages found.')
+                LOG.error('Zero pages found.')
                 return
 
         remaining_content = ''
@@ -1004,7 +1007,7 @@ def handle_split_markdown(args):
             pages = pages[1:]
 
         if len(pages) == 0:
-            print('Only titme page found... aborting')
+            LOG.error('Only title page found... aborting')
             return
 
         if args_file == CHAPTER_INDEX:
@@ -1019,10 +1022,8 @@ def handle_split_markdown(args):
             book.save()
         else:
             if args_file not in book.chapters:
-                print('This is not a page in a chapter!')
+                LOG.error('This is not a page in a chapter!')
                 return
-
-            print('hello')
 
             original_page_file = os.path.join(book.source_folder, args_file)
             dir_name = os.path.splitext(args_file)[0]
@@ -1060,7 +1061,7 @@ def handle_indent_markdown(args):
     root = os.getcwd()
     book = get_book_or_chapter(root)
     if book is None:
-        print('This is not a book, consider using import instead')
+        LOG.error('This is not a book, consider using import instead')
         return
     for args_file in args.files:
         from_file_path = os.path.join(book.source_folder, args_file)
@@ -1076,22 +1077,22 @@ def handle_import_markdown(args):
     root = os.getcwd()
     path = os.path.abspath(args.file)
     if not file_exist(path):
-        print('Missing file ', path)
+        LOG.error(f'{path}: Missing file ')
         return
     pages = list(markdown_extract_pages_from_file(path))
 
     if args.print:
         for data in pages:
             title, lines = data
-            print('{} ({})'.format(title, len(lines)))
+            LOG.info('{} ({})'.format(title, len(lines)))
     else:
         if len(pages) > 1:
-            print('Unable to create a book from {}'.format(path))
+            LOG.error('Unable to create a book from {}'.format(path))
             return
 
         path = find_book_file(root)
         if path is not None:
-            print('This is a book, importing will create a new book')
+            LOG.error('This is a book, importing will create a new book')
             return
 
         index_file = os.path.join(root, CHAPTER_INDEX)
@@ -1117,7 +1118,7 @@ def handle_build(_):
 
     path = find_book_file(root)
     if path is None:
-        print('This is not a book')
+        LOG.error('This is not a book')
         return
 
     book = Book.load(path)
@@ -1159,8 +1160,7 @@ def handle_build(_):
                 source_path = os.path.normpath(os.path.join(markdown_folder, image_name))
                 target_path = os.path.normpath(os.path.realpath(os.path.join(html, relative, image_name)))
                 os.makedirs(os.path.dirname(target_path), exist_ok=True)
-                # print('Copying {} -> {}'.format(source_path, target_path))
-                print('Copying {}'.format(os.path.basename(target_path)))
+                LOG.debug(f'Copying {os.path.basename(target_path)}')
                 shutil.copyfile(source_path, target_path)
 
     # generate
@@ -1171,20 +1171,20 @@ def handle_list(_):
     root = os.getcwd()
     path = find_book_file(root)
     if path is None:
-        print('This is not a book')
+        LOG.error('This is not a book')
         return
 
     book = Book.load(path)
 
     for md in book.iterate_markdown_files():
-        print(md)
+        LOG.info(md)
 
 
 def handle_list_images(_):
     root = os.getcwd()
     path = find_book_file(root)
     if path is None:
-        print('This is not a book')
+        LOG.error('This is not a book')
         return
 
     book = Book.load(path)
@@ -1192,14 +1192,14 @@ def handle_list_images(_):
     for md in book.iterate_markdown_files():
         _, content = read_frontmatter_file(md)
         for image in list_images_in_markdown(content):
-            print(image)
+            LOG.info(image)
 
 
 def handle_make_local(_):
     root = os.getcwd()
     path = find_book_file(root)
     if path is None:
-        print('This is not a book')
+        LOG.error('This is not a book')
         return
 
     book = Book.load(path)
@@ -1217,7 +1217,7 @@ def handle_make_local(_):
                 image_name = os.path.basename(url.path)
                 target_path = os.path.join(markdown_folder, image_name)
                 if file_exist(target_path):
-                    print('Image {} for {} already exists'.format(image_name, md))
+                    LOG.error(f'{md}: Image {image_name} already exists')
                 images[image] = target_path
 
     for md in markdown_files:
@@ -1229,7 +1229,7 @@ def handle_make_local(_):
         if not file_exist(dest):
             urllib.request.urlretrieve(source, dest)
 
-    print('{} replacements made'.format(len(images)))
+    LOG.info(f'{len(images)} replacements made')
 
 ###################################################################################################
 ###################################################################################################
