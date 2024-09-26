@@ -1,0 +1,23 @@
+{{ $pages := . }}
+
+{{ if gt (len .) 0 }}
+    {{ $s := newScratch }}
+    {{ $s.Set "index" 1 }}
+    <ol>
+        {{ range $pages }}
+            {{with .Params.ignore_count}}
+                <li class="hidden" value="-1">
+            {{else}}
+                <li value="{{$s.Get "index"}}">
+            {{end}}
+                <a href="{{ .Permalink }}">{{ .Title }}</a>
+                {{ partial "recursive-list.html" (union .Pages .Sections) }}
+
+                {{if .Params.ignore_count}}
+                {{else}}
+                {{ $s.Set "index" (add ($s.Get "index") 1) }}
+                {{end}}
+            </li>
+        {{ end }}
+    </ol>
+{{ end }}

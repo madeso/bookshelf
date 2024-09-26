@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html
+	xmlns="http://www.w3.org/1999/xhtml"
+	xml:lang="{{ or site.Language.LanguageCode }}"
+	lang="{{ or site.Language.LanguageCode }}"
+	dir="{{ or site.Language.LanguageDirection `ltr` }}"
+>
+	<head>
+		{{ partial "head.html" . }}
+	</head>
+	<body>
+		<div class="page sidebar">
+			<div class="content">
+				<nav class="top">{{ partial "table-nav.html" . }}</nav>
+
+				<h1>{{.Title}}</h1>
+				<h1 class="book">
+					{{- range first 1 (after 2 .Ancestors.Reverse) }}
+						<a href="{{.RelPermalink}}">{{ .Title }}</a>
+					{{- end }}
+					{{- range after 3 .Ancestors.Reverse }}
+						<span class="section">
+							<a href="{{.RelPermalink}}">{{ .Title }}</a>
+						</span>
+					{{- end }}
+				</h1>
+				
+				{{ block "main" . }}{{ end }}
+
+				<nav class="bottom">{{ partial "table-nav.html" . }}</nav>
+			</div>
+		</div>
+
+		<footer>
+			<p>Copyright {{ now.Year }}. Some rights reserved.</p>
+		</footer>
+	</body>
+</html>
