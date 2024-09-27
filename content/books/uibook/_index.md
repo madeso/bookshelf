@@ -1,5 +1,6 @@
 +++
 title = "User Interface Design For Programmers"
+tags = ['ui', 'test']
 +++
 
 Most programmers' fear of user interface (UI) programming comes from their fear of doing UI design. They think that UI design is like graphic design―the mysterious process by which creative, latte-drinking, all-black-wearing people produce cool-looking, artistic pieces. Most programmers see themselves as analytic, logical thinkers instead―strong at reasoning, weak on artistic judgment, and incapable of doing UI design.

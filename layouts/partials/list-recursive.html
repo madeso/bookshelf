@@ -11,7 +11,7 @@
                 <li value="{{$s.Get "index"}}">
             {{end}}
                 <a href="{{ .Permalink }}">{{ .Title }}</a>
-                {{ partial "recursive-list.html" (union .Pages .Sections) }}
+                {{ partial "list-recursive.html" (union .Pages .Sections) }}
 
                 {{if .Params.ignore_count}}
                 {{else}}

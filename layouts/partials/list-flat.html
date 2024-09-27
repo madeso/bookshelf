@@ -1,0 +1,11 @@
+{{ $pages := . }}
+
+{{ if gt (len .) 0 }}
+    <ul>
+        {{ range $pages }}
+            <li>
+                <a href="{{ .Permalink }}">{{ .Title }}</a>
+            </li>
+        {{ end }}
+    </ul>
+{{ end }}

@@ -1,5 +1,6 @@
 +++
 title = 'Command Line Interface Guidelines'
+tags = ['cli', 'test']
 +++
 
 An [open-source](https://github.com/cli-guidelines/cli-guidelines) guide to help you write better command-line programs, taking traditional UNIX principles and updating them for the modern day.
@@ -84,13 +85,13 @@ This guide is also agnostic about programming languages and tooling in general.
 
 Who is this guide for?
 
-- If you are creating a CLI program and you are looking for principles and concrete best practices for its UI design, this guide is for you.
-- If you are a professional “CLI UI designer,” that’s amazing—we’d love to learn from you.
-- If you’d like to avoid obvious missteps of the variety that go against 40 years of CLI design conventions, this guide is for you.
-- If you want to delight people with your program’s good design and helpful help, this guide is definitely for you.
-- If you are creating a GUI program, this guide is not for you—though you may learn some GUI anti-patterns if you decide to read it anyway.
-- If you are designing an immersive, full-screen CLI port of Minecraft, this guide isn’t for you.
-  (But we can’t wait to see it!)
+-   If you are creating a CLI program and you are looking for principles and concrete best practices for its UI design, this guide is for you.
+-   If you are a professional “CLI UI designer,” that’s amazing—we’d love to learn from you.
+-   If you’d like to avoid obvious missteps of the variety that go against 40 years of CLI design conventions, this guide is for you.
+-   If you want to delight people with your program’s good design and helpful help, this guide is definitely for you.
+-   If you are creating a GUI program, this guide is not for you—though you may learn some GUI anti-patterns if you decide to read it anyway.
+-   If you are designing an immersive, full-screen CLI port of Minecraft, this guide isn’t for you.
+    (But we can’t wait to see it!)
 
 ## Philosophy {#philosophy}
 
@@ -179,10 +180,10 @@ This mode of learning through repeated failure is like a conversation the user i
 Trial-and-error isn’t the only type of conversational interaction, though.
 There are others:
 
-- Running one command to set up a tool and then learning what commands to run to actually start using it.
-- Running several commands to set up an operation, and then a final command to run it (e.g. multiple `git add`s, followed by a `git commit`).
-- Exploring a system—for example, doing a lot of `cd` and `ls` to get a sense of a directory structure, or `git log` and `git show` to explore the history of a file.
-- Doing a dry-run of a complex operation before running it for real.
+-   Running one command to set up a tool and then learning what commands to run to actually start using it.
+-   Running several commands to set up an operation, and then a final command to run it (e.g. multiple `git add`s, followed by a `git commit`).
+-   Exploring a system—for example, doing a lot of `cd` and `ls` to get a sense of a directory structure, or `git log` and `git show` to explore the history of a file.
+-   Doing a dry-run of a complex operation before running it for real.
 
 Acknowledging the conversational nature of command-line interaction means you can bring relevant techniques to bear on its design.
 You can suggest possible corrections when user input is invalid, you can make the intermediate state clear when the user is going through a multi-step process, you can confirm for them that everything looks good before they do something scary.
@@ -262,13 +263,13 @@ They will normally handle arguments, flag parsing, help text, and even spelling 
 
 Here are some that we like:
 
-- Go: [Cobra](https://github.com/spf13/cobra), [cli](https://github.com/urfave/cli)
-- Java: [picocli](https://picocli.info/)
-- Node: [oclif](https://oclif.io/)
-- Python: [Click](https://click.palletsprojects.com/), [Typer](https://github.com/tiangolo/typer)
-- Ruby: [TTY](https://ttytoolkit.org/)
-- Rust: [clap](https://clap.rs/), [structopt](https://github.com/TeXitoi/structopt)
-- PHP: [console](https://github.com/symfony/console)
+-   Go: [Cobra](https://github.com/spf13/cobra), [cli](https://github.com/urfave/cli)
+-   Java: [picocli](https://picocli.info/)
+-   Node: [oclif](https://oclif.io/)
+-   Python: [Click](https://click.palletsprojects.com/), [Typer](https://github.com/tiangolo/typer)
+-   Ruby: [TTY](https://ttytoolkit.org/)
+-   Rust: [clap](https://clap.rs/), [structopt](https://github.com/TeXitoi/structopt)
+-   PHP: [console](https://github.com/symfony/console)
 
 **Return zero exit code on success, non-zero on failure.**
 Exit codes are how scripts determine whether a program succeeded or failed, so you should report this correctly.
@@ -292,10 +293,10 @@ Unless your program is very simple and does something obvious by default (e.g. `
 
 The concise help text should only include:
 
-- A description of what your program does.
-- One or two example invocations.
-- Descriptions of flags, unless there are lots of them.
-- An instruction to pass the `--help` flag for more information.
+-   A description of what your program does.
+-   One or two example invocations.
+-   Descriptions of flags, unless there are lots of them.
+-   An instruction to pass the `--help` flag for more information.
 
 `jq` does this well.
 When you type `jq`, it displays an introductory description and an example, then prompts you to pass `jq --help` for the full listing of flags:
@@ -575,8 +576,8 @@ For example, in the `git status` output above, it suggests commands you can run 
 **Actions crossing the boundary of the program’s internal world should usually be explicit.**
 This includes things like:
 
-- Reading or writing files that the user didn’t explicitly pass as arguments (unless those files are storing internal program state, such as a cache).
-- Talking to a remote server, e.g. to download a file.
+-   Reading or writing files that the user didn’t explicitly pass as arguments (unless those files are storing internal program state, such as a cache).
+-   Talking to a remote server, e.g. to download a file.
 
 **Increase information density—with ASCII art!**
 For example, `ls` shows permissions in a scannable way.
@@ -602,12 +603,12 @@ Don’t overuse it—if everything is a different color, then the color means no
 **Disable color if your program is not in a terminal or the user requested it.**
 These things should disable colors:
 
-- `stdout` or `stderr` is not an interactive terminal (a TTY).
-  It’s best to individually check—if you’re piping `stdout` to another program, it’s still useful to get colors on `stderr`.
-- The `NO_COLOR` environment variable is set.
-- The `TERM` environment variable has the value `dumb`.
-- The user passes the option `--no-color`.
-- You may also want to add a `MYAPP_NO_COLOR` environment variable in case users want to disable color specifically for your program.
+-   `stdout` or `stderr` is not an interactive terminal (a TTY).
+    It’s best to individually check—if you’re piping `stdout` to another program, it’s still useful to get colors on `stderr`.
+-   The `NO_COLOR` environment variable is set.
+-   The `TERM` environment variable has the value `dumb`.
+-   The user passes the option `--no-color`.
+-   You may also want to add a `MYAPP_NO_COLOR` environment variable in case users want to disable color specifically for your program.
 
 _Further reading: [no-color.org](https://no-color.org/), [12 Factor CLI Apps](https://medium.com/@jdxcode/12-factor-cli-apps-dd3c227a0e46)_
 
@@ -689,12 +690,12 @@ One nice thing you can do is provide a URL and have it pre-populate as much info
 
 A note on terminology:
 
-- _Arguments_, or _args_, are positional parameters to a command.
-  For example, the file paths you provide to `cp` are args.
-  The order of args is often important: `cp foo bar` means something different from `cp bar foo`.
-- _Flags_ are named parameters, denoted with either a hyphen and a single-letter name (`-r`) or a double hyphen and a multiple-letter name (`--recursive`).
-  They may or may not also include a user-specified value (`--file foo.txt`, or `--file=foo.txt`).
-  The order of flags, generally speaking, does not affect program semantics.
+-   _Arguments_, or _args_, are positional parameters to a command.
+    For example, the file paths you provide to `cp` are args.
+    The order of args is often important: `cp foo bar` means something different from `cp bar foo`.
+-   _Flags_ are named parameters, denoted with either a hyphen and a single-letter name (`-r`) or a double hyphen and a multiple-letter name (`--recursive`).
+    They may or may not also include a user-specified value (`--file foo.txt`, or `--file=foo.txt`).
+    The order of flags, generally speaking, does not affect program semantics.
 
 **Prefer flags to args.**
 It’s a bit more typing, but it makes it much clearer what is going on.
@@ -728,30 +729,30 @@ That way, a user doesn’t have to remember two different options (and which com
 
 Here's a list of commonly used options:
 
-- `-a`, `--all`: All.
-  For example, `ps`, `fetchmail`.
-- `-d`, `--debug`: Show debugging output.
-- `-f`, `--force`: Force.
-  For example, `rm -f` will force the removal of files, even if it thinks it does not have permission to do it.
-  This is also useful for commands which are doing something destructive that usually require user confirmation, but you want to force it to do that destructive action in a script.
-- `--json`: Display JSON output.
-  See the [output](#output) section.
-- `-h`, `--help`: Help.
-  This should only mean help.
-  See the [help](#help) section.
-- `--no-input`: See the [interactivity](#interactivity) section.
-- `-o`, `--output`: Output file.
-  For example, `sort`, `gcc`.
-- `-p`, `--port`: Port.
-  For example, `psql`, `ssh`.
-- `-q`, `--quiet`: Quiet.
-  Display less output.
-  This is particularly useful when displaying output for humans that you might want to hide when running in a script.
-- `-u`, `--user`: User.
-  For example, `ps`, `ssh`.
-- `--version`: Version.
-- `-v`: This can often mean either verbose or version.
-  You might want to use `-d` for verbose and this for version, or for nothing to avoid confusion.
+-   `-a`, `--all`: All.
+    For example, `ps`, `fetchmail`.
+-   `-d`, `--debug`: Show debugging output.
+-   `-f`, `--force`: Force.
+    For example, `rm -f` will force the removal of files, even if it thinks it does not have permission to do it.
+    This is also useful for commands which are doing something destructive that usually require user confirmation, but you want to force it to do that destructive action in a script.
+-   `--json`: Display JSON output.
+    See the [output](#output) section.
+-   `-h`, `--help`: Help.
+    This should only mean help.
+    See the [help](#help) section.
+-   `--no-input`: See the [interactivity](#interactivity) section.
+-   `-o`, `--output`: Output file.
+    For example, `sort`, `gcc`.
+-   `-p`, `--port`: Port.
+    For example, `psql`, `ssh`.
+-   `-q`, `--quiet`: Quiet.
+    Display less output.
+    This is particularly useful when displaying output for humans that you might want to hide when running in a script.
+-   `-u`, `--user`: User.
+    For example, `ps`, `ssh`.
+-   `--version`: Version.
+-   `-v`: This can often mean either verbose or version.
+    You might want to use `-d` for verbose and this for version, or for nothing to avoid confusion.
 
 **Make the default the right thing for most users.**
 Making things configurable is good, but most users are not going to find the right flag and remember to use it all the time (or alias it).
@@ -772,16 +773,16 @@ A common convention is to prompt for the user to type `y` or `yes` if running in
 
 “Dangerous” is a subjective term, and there are differing levels of danger:
 
-- **Mild:** A small, local change such as deleting a file.
-  You might want to prompt for confirmation, you might not.
-  For example, if the user is explicitly running a command called something like “delete,” you probably don’t need to ask.
-- **Moderate:** A bigger local change like deleting a directory, a remote change like deleting a resource of some kind, or a complex bulk modification that can’t be easily undone.
-  You usually want to prompt for confirmation here.
-  Consider giving the user a way to “dry run” the operation so they can see what’ll happen before they commit to it.
-- **Severe:** Deleting something complex, like an entire remote application or server.
-  You don’t just want to prompt for confirmation here—you want to make it hard to confirm by accident.
-  Consider asking them to type something non-trivial such as the name of the thing they’re deleting.
-  Let them alternatively pass a flag such as `--confirm="name-of-thing"`, so it’s still scriptable.
+-   **Mild:** A small, local change such as deleting a file.
+    You might want to prompt for confirmation, you might not.
+    For example, if the user is explicitly running a command called something like “delete,” you probably don’t need to ask.
+-   **Moderate:** A bigger local change like deleting a directory, a remote change like deleting a resource of some kind, or a complex bulk modification that can’t be easily undone.
+    You usually want to prompt for confirmation here.
+    Consider giving the user a way to “dry run” the operation so they can see what’ll happen before they commit to it.
+-   **Severe:** Deleting something complex, like an entire remote application or server.
+    You don’t just want to prompt for confirmation here—you want to make it hard to confirm by accident.
+    Consider asking them to type something non-trivial such as the name of the thing they’re deleting.
+    Let them alternatively pass a flag such as `--confirm="name-of-thing"`, so it’s still scriptable.
 
 Consider whether there are non-obvious ways to accidentally destroy things.
 For example, imagine a situation where changing a number in a configuration file from 10 to 1 means that 9 things will be implicitly deleted—this should be considered a severe risk, and should be difficult to do by accident.
@@ -1014,8 +1015,8 @@ Configuration generally falls into a few categories:
 
     Examples:
 
-    - Setting the level of debugging output
-    - Enabling a safe mode or dry run of a program
+    -   Setting the level of debugging output
+    -   Enabling a safe mode or dry run of a program
 
     Recommendation: **Use [flags](#arguments-and-flags).**
     [Environment variables](#environment-variables) may or may not be useful as well.
@@ -1028,9 +1029,9 @@ Configuration generally falls into a few categories:
 
     Examples:
 
-    - Providing a non-default path to items needed for a program to start
-    - Specifying how or whether color should appear in output
-    - Specifying an HTTP proxy server to route all requests through
+    -   Providing a non-default path to items needed for a program to start
+    -   Specifying how or whether color should appear in output
+    -   Specifying an HTTP proxy server to route all requests through
 
     Recommendation: **Use [flags](#arguments-and-flags) and probably [environment variables](#environment-variables) too.**
     Users may want to set the variables in their shell profile so they apply globally, or in `.env` for a particular project.
@@ -1056,11 +1057,11 @@ If you have to append or modify to a system-wide config file, use a dated commen
 **Apply configuration parameters in order of precedence.**
 Here is the precedence for config parameters, from highest to lowest:
 
-- Flags
-- The running shell’s environment variables
-- Project-level configuration (eg. `.env`)
-- User-level configuration
-- System wide configuration
+-   Flags
+-   The running shell’s environment variables
+-   Project-level configuration (eg. `.env`)
+-   User-level configuration
+-   System wide configuration
 
 ### Environment variables {#environment-variables}
 
@@ -1082,18 +1083,18 @@ Here’s a [list of POSIX standard env vars](https://pubs.opengroup.org/onlinepu
 
 **Check general-purpose environment variables for configuration values when possible:**
 
-- `NO_COLOR`, to disable color (see [Output](#output)).
-- `DEBUG`, to enable more verbose output.
-- `EDITOR`, if you need to prompt the user to edit a file or input more than a single line.
-- `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` and `NO_PROXY`, if you’re going to perform network operations.
-  (The HTTP library you’re using might already check for these.)
-- `SHELL`, if you need to open up an interactive session of the user's preferred shell.
-  (If you need to execute a shell script, use a specific interpreter like `/bin/sh`)
-- `TERM`, `TERMINFO` and `TERMCAP`, if you’re going to use terminal-specific escape sequences.
-- `TMPDIR`, if you’re going to create temporary files.
-- `HOME`, for locating configuration files.
-- `PAGER`, if you want to automatically page output.
-- `LINES` and `COLUMNS`, for output that’s dependent on screen size (e.g. tables).
+-   `NO_COLOR`, to disable color (see [Output](#output)).
+-   `DEBUG`, to enable more verbose output.
+-   `EDITOR`, if you need to prompt the user to edit a file or input more than a single line.
+-   `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` and `NO_PROXY`, if you’re going to perform network operations.
+    (The HTTP library you’re using might already check for these.)
+-   `SHELL`, if you need to open up an interactive session of the user's preferred shell.
+    (If you need to execute a shell script, use a specific interpreter like `/bin/sh`)
+-   `TERM`, `TERMINFO` and `TERMCAP`, if you’re going to use terminal-specific escape sequences.
+-   `TMPDIR`, if you’re going to create temporary files.
+-   `HOME`, for locating configuration files.
+-   `PAGER`, if you want to automatically page output.
+-   `LINES` and `COLUMNS`, for output that’s dependent on screen size (e.g. tables).
 
 **Read environment variables from `.env` where appropriate.**
 If a command defines environment variables that are unlikely to change as long as the user is working in a particular directory, then it should also read them from a local `.env` file so users can configure it differently for different projects without having to specify them every time.
@@ -1102,12 +1103,12 @@ Many languages have libraries for reading `.env` files ([Rust](https://crates.io
 **Don’t use `.env` as a substitute for a proper [configuration file](#configuration).**
 `.env` files have a lot of limitations:
 
-- A `.env` file is not commonly stored in source control
-- (Therefore, any configuration stored in it has no history)
-- It has only one data type: string
-- It lends itself to being poorly organized
-- It makes encoding issues easy to introduce
-- It often contains sensitive credentials & key material that would be better stored more securely
+-   A `.env` file is not commonly stored in source control
+-   (Therefore, any configuration stored in it has no history)
+-   It has only one data type: string
+-   It lends itself to being poorly organized
+-   It makes encoding issues easy to introduce
+-   It often contains sensitive credentials & key material that would be better stored more securely
 
 If it seems like these limitations will hamper usability or security, then a dedicated config file might be more appropriate.
 
@@ -1160,29 +1161,29 @@ If you choose to do it by default (“opt-out”), then clearly tell users about
 
 Examples of projects that collect usage statistics:
 
-- Angular.js [collects detailed analytics using Google Analytics](https://angular.io/analytics), in the name of feature prioritization.
-  You have to explicitly opt in.
-  You can change the tracking ID to point to your own Google Analytics property if you want to track Angular usage inside your organization.
-- Homebrew sends metrics to Google Analytics and has [a nice FAQ](https://docs.brew.sh/Analytics) detailing their practices.
-- Next.js [collects anonymized usage statistics](https://nextjs.org/telemetry) and is enabled by default.
+-   Angular.js [collects detailed analytics using Google Analytics](https://angular.io/analytics), in the name of feature prioritization.
+    You have to explicitly opt in.
+    You can change the tracking ID to point to your own Google Analytics property if you want to track Angular usage inside your organization.
+-   Homebrew sends metrics to Google Analytics and has [a nice FAQ](https://docs.brew.sh/Analytics) detailing their practices.
+-   Next.js [collects anonymized usage statistics](https://nextjs.org/telemetry) and is enabled by default.
 
 **Consider alternatives to collecting analytics.**
 
-- Instrument your web docs.
-  If you want to know how people are using your CLI tool, make a set of docs around the use cases you’d like to understand best, and see how they perform over time.
-  Look at what people search for within your docs.
-- Instrument your downloads.
-  This can be a rough metric to understand usage and what operating systems your users are running.
-- Talk to your users.
-  Reach out and ask people how they’re using your tool.
-  Encourage feedback and feature requests in your docs and repos, and try to draw out more context from those who submit feedback.
+-   Instrument your web docs.
+    If you want to know how people are using your CLI tool, make a set of docs around the use cases you’d like to understand best, and see how they perform over time.
+    Look at what people search for within your docs.
+-   Instrument your downloads.
+    This can be a rough metric to understand usage and what operating systems your users are running.
+-   Talk to your users.
+    Reach out and ask people how they’re using your tool.
+    Encourage feedback and feature requests in your docs and repos, and try to draw out more context from those who submit feedback.
 
 _Further reading: [Open Source Metrics](https://opensource.guide/metrics/)_
 
 ## Further reading
 
-- [The Unix Programming Environment](https://en.wikipedia.org/wiki/The_Unix_Programming_Environment), Brian W. Kernighan and Rob Pike
-- [POSIX Utility Conventions](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html)
-- [Program Behavior for All Programs](https://www.gnu.org/prep/standards/html_node/Program-Behavior.html), GNU Coding Standards
-- [12 Factor CLI Apps](https://medium.com/@jdxcode/12-factor-cli-apps-dd3c227a0e46), Jeff Dickey
-- [CLI Style Guide](https://devcenter.heroku.com/articles/cli-style-guide), Heroku
+-   [The Unix Programming Environment](https://en.wikipedia.org/wiki/The_Unix_Programming_Environment), Brian W. Kernighan and Rob Pike
+-   [POSIX Utility Conventions](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html)
+-   [Program Behavior for All Programs](https://www.gnu.org/prep/standards/html_node/Program-Behavior.html), GNU Coding Standards
+-   [12 Factor CLI Apps](https://medium.com/@jdxcode/12-factor-cli-apps-dd3c227a0e46), Jeff Dickey
+-   [CLI Style Guide](https://devcenter.heroku.com/articles/cli-style-guide), Heroku
