@@ -1,6 +1,8 @@
 +++
 title = "Further reading"
 weight = 60
+no_prev = false
+no_next = true
 +++
 
 -   [The Unix Programming Environment](https://en.wikipedia.org/wiki/The_Unix_Programming_Environment), Brian W. Kernighan and Rob Pike

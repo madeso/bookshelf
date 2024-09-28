@@ -1,6 +1,8 @@
 +++
 title = "About the author"
 weight = 999
+no_prev = false
+no_next = true
 +++
 
 ## The standard Lorem Ipsum passage, used since the 1500s

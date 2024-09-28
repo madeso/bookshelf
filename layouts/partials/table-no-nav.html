@@ -1,18 +1,9 @@
-{{$prev := (partial "navigation/lighter.hugo" .page )}}
-{{$next := (partial "navigation/heavier.hugo" .page )}}
-
 <nav class="{{.class}}">
     <table width="100%">
         <tr>
             <td>
                 <span class="prev">
-                    {{ if not .page.Params.no_prev }}
-                        <a href="{{ $prev.RelPermalink }}">
-                    {{ end }}
                     &larr; Previous
-                    {{ if not .page.Params.no_prev }}
-                        </a>
-                    {{end}}
                 </span>
             </td>
             <td>
@@ -23,13 +14,7 @@
             </td>
             <td>
                 <span class="next">
-                    {{ if not .page.Params.no_next }}
-                        <a href="{{ $next.RelPermalink }}">
-                    {{ end }}
                     Next &rarr;
-                    {{ if not .page.Params.no_next }}
-                        </a>
-                    {{end}}
                 </span>
             </td>
         </tr>

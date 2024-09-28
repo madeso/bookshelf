@@ -11,23 +11,7 @@
 	<body>
 		<div class="page sidebar">
 			<div class="content">
-				<nav class="top">{{ partial "table-nav.html" . }}</nav>
-
-				<h1>{{.Title}}</h1>
-				<h1 class="book">
-					{{- range first 1 (after 2 .Ancestors.Reverse) }}
-						<a href="{{.RelPermalink}}">{{ .Title }}</a>
-					{{- end }}
-					{{- range after 3 .Ancestors.Reverse }}
-						<span class="section">
-							<a href="{{.RelPermalink}}">{{ .Title }}</a>
-						</span>
-					{{- end }}
-				</h1>
-				
 				{{ block "main" . }}{{ end }}
-
-				<nav class="bottom">{{ partial "table-nav.html" . }}</nav>
 			</div>
 		</div>
 
