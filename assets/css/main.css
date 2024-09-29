@@ -494,3 +494,20 @@ footer
     }
 }
 
+
+div.terms, .terms div {
+    display: inline-flex;
+}
+.terms li {
+    margin-left: 22px;
+}
+.terms ul {
+    display: inline-flex;
+    margin: 0;
+    padding: 0;
+}
+
+.terms li:first-child {
+    list-style-type: none;
+    margin-left: 3px;
+}

@@ -1,6 +1,7 @@
 {{ define "main" }}
     {{ partial "table-nav.html" (dict "page" . "class" "top") }}
     {{ partial "page-title.html" . }}
+    {{ partial "terms.html" (dict "taxonomy" "tags" "page" .) }}
 
 	{{ .Content }}
 	{{ partial "list-recursive.html" .Pages }}
