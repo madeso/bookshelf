@@ -2,6 +2,7 @@
     {{ partial "table-nav.html" (dict "page" . "class" "top") }}
     {{ partial "page-title.html" . }}
     {{ partial "terms.html" (dict "taxonomy" "tags" "page" .) }}
+    {{ partial "terms.html" (dict "taxonomy" "authors" "page" .) }}
 
 	{{ .Content }}
 	{{ partial "list-recursive.html" .Pages }}
