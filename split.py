@@ -127,14 +127,18 @@ def markdown_split(arg: str, remove_src: bool, dry_run: bool, attach_name: bool)
         fm.append(FRONTMATTER_SEP)
         write_file(path, fm, s[1:], dry_run)
         if base_folder != folder_name:
-            src = os.path.join(dir, base, base_folder)
-            dst = os.path.join(dir, base, folder_name, 'img')
-            if os.path.exists(src):
+            folder = os.path.join(dir, base, folder_name)
+            sources = set(find_base_folder(dir, base, index))
+            sources.discard(folder)
+            sources = list(sources)
+            dst = os.path.join(folder, 'img')
+            if len(sources) == 1:
+                src = sources[0]
                 print(f"Moving {src} to {dst}")
                 if not dry_run:
                     os.rename(src, dst)
             else:
-                print(f"  missing {src} folder")
+                print(f"  no unique folder for {index} in {dir}/{base}: {sources}")
 
     # write intro page
     path = os.path.join(dir, base, "_index.md")
@@ -146,6 +150,19 @@ def markdown_split(arg: str, remove_src: bool, dry_run: bool, attach_name: bool)
         if not dry_run:
             os.remove(filename)
 
+def find_base_folder(dir: str, base: str, index: int) -> List[str]:
+    sources = []
+    folder = os.path.join(dir, base)
+    for e in os.listdir(folder):
+        d = os.path.join(folder, e)
+        if os.path.isdir(d):
+            if e.startswith(f"{index}"):
+                sources.append(d)
+            if e.startswith(f"{index:02d}"):
+                sources.append(d)
+            if e.startswith(f"{index:03d}"):
+                sources.append(d)
+    return sources
 
 def write_file(path: str, frontmatter: List[str], lines: List[str], dry_run: bool):
     print(f"Writing {path}")
