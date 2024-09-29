@@ -4,7 +4,8 @@
     <ul>
         {{ range $pages }}
             <li>
-                <a href="{{ .Permalink }}">{{ .Title }}</a>
+                <a href="{{ .Permalink }}">{{ .Title }}</a><br />
+                {{ .Summary }}
             </li>
         {{ end }}
     </ul>
