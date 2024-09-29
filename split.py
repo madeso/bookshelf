@@ -45,6 +45,13 @@ def join_sections(sections: List[List[str]], depth: int) -> List[List[str]]:
         joined.append(section)
     return joined
 
+def cleanup_name(name: str) -> str:
+    replaced = name.replace(' ', '-').lower()
+
+    # remove anything that isn't a-z, 0-9, or a dash
+    replaced = ''.join(c for c in replaced if c.isalnum() or c == '-')
+
+    return replaced
 
 def markdown_split(arg: str, remove_src: bool, dry_run: bool, attach_name: bool):
     FRONTMATTER_SEP = '+++'
@@ -52,6 +59,12 @@ def markdown_split(arg: str, remove_src: bool, dry_run: bool, attach_name: bool)
     # get directory of the file
     filename = os.path.abspath(arg)
     dir = os.path.dirname(filename)
+    base = os.path.splitext(os.path.basename(filename))[0]
+
+    # if we split a "dir" file, don't create a subfolder
+    if base == "_index" or base == "index":
+        base = ''
+
     print(f"Exporting {filename} to {dir}")
 
     lines = []
@@ -88,33 +101,50 @@ def markdown_split(arg: str, remove_src: bool, dry_run: bool, attach_name: bool)
     # get lowest headline
     lowest = min(get_section_depth(s) for s in sections)
 
+    # transform [2 3 2 2] for 2 into [(2 3) (2) (2)]
     joined_sections = join_sections(sections, lowest)
-    base = os.path.splitext(os.path.basename(filename))[0]
-
-    path = os.path.join(dir, base, "_index.md")
-    write_file(path, frontmatter, intro, dry_run)
 
     # write all sections to files
-    index = 0
-    for s in joined_sections:
-        index += 1
+    for index0, s in enumerate(joined_sections):
+        is_first = index0 == 0
+        is_last = index0 == len(joined_sections) - 1
+        index = index0 + 1
         name = get_sectiion_name(s).strip()
         folder_name = f"{index:02d}"
+        base_folder = folder_name
         if attach_name:
-            folder_name += "-" + name.lower().replace(' ', '-')
+            folder_name += "-" + cleanup_name(name)
         path = os.path.join(dir, base, folder_name, "index.md")
         fm = [
             FRONTMATTER_SEP,
             f"title = \"{name}\"",
-            f"weight = {index}0",
-            FRONTMATTER_SEP
+            f"weight = {index}0"
         ]
+        if is_first or is_last:
+            b2s = lambda b: "true" if b else "false"
+            fm.append(f"no_prev = {b2s(is_first)}")
+            fm.append(f"no_next = {b2s(is_last)}")
+        fm.append(FRONTMATTER_SEP)
         write_file(path, fm, s[1:], dry_run)
+        if base_folder != folder_name:
+            src = os.path.join(dir, base, base_folder)
+            dst = os.path.join(dir, base, folder_name, 'img')
+            if os.path.exists(src):
+                print(f"Moving {src} to {dst}")
+                if not dry_run:
+                    os.rename(src, dst)
+            else:
+                print(f"  missing {src} folder")
+
+    # write intro page
+    path = os.path.join(dir, base, "_index.md")
+    write_file(path, frontmatter, intro, dry_run)
 
     # remove original source file
-    if remove_src and not dry_run:
+    if remove_src and filename != path:
         print(f"Removing {filename}")
-        os.remove(filename)
+        if not dry_run:
+            os.remove(filename)
 
 
 def write_file(path: str, frontmatter: List[str], lines: List[str], dry_run: bool):
