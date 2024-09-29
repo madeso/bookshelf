@@ -1,0 +1,6 @@
+{{ define "main" }}
+  {{ partial "table-nav.html" (dict "page" . "class" "top") }}
+  {{ partial "page-title.html" . }}
+  {{ .Content }}
+  {{ partial "table-nav.html" (dict "page" . "class" "botom") }}
+{{end }}

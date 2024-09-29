@@ -1,5 +1,5 @@
 {{ define "main" }}
-  {{ partial "table-nav.html" (dict "page" . "class" "top") }}
+  {{ partial "table-no-nav.html" (dict "page" . "class" "top") }}
   {{ .Content }}
-  {{ partial "table-nav.html" (dict "page" . "class" "botom") }}
+  {{ partial "table-no-nav.html" (dict "page" . "class" "botom") }}
 {{ end }}
