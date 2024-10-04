@@ -3,6 +3,7 @@ title = '97 Things Every Programmer Should Know'
 tags = ['test', 'tech']
 no_prev = true
 no_next = false
+summary='Pearls of wisdom for programmers collected from leading practitioners.'
 +++
 
 _Pearls of wisdom for programmers collected from leading practitioners._
