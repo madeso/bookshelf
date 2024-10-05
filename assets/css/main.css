@@ -183,6 +183,11 @@ code
     color: #526d7a;
     font: normal 15px "Source Code Pro", Menlo, Consolas, Monaco, monospace;
     white-space: pre;
+    background-color: #eee;
+}
+
+pre code {
+    background-color: transparent;
 }
 
 a code
