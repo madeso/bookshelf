@@ -183,7 +183,7 @@ code
     color: #526d7a;
     font: normal 15px "Source Code Pro", Menlo, Consolas, Monaco, monospace;
     white-space: pre;
-    background-color: #eee;
+    background-color: #f8fbfc;
 }
 
 pre code {
@@ -312,69 +312,33 @@ footer
     font: 14px "Source Sans Pro", "Lucida Grande", "Lucida Sans Unicode", Verdana, sans-serif;
 }
 
-.codehilite .k
+.chroma .k, .chroma .kt, .chroma .kr
 {
     color: #07f;
     font-weight: bold;
 }
 
-.codehilite .kd
+.chroma .kd
 {
     color: #07f;
 }
 
-.codehilite .kt
-{
-    color: #07f;
-    font-weight: bold;
-}
-
-.codehilite .s
+.chroma .s, .chroma .s2, .chroma .sc
 {
     color: #c70;
 }
 
-.codehilite .sc
-{
-    color: #c70;
-}
-
-.codehilite .s2
-{
-    color: #c70;
-}
-
-.codehilite .c
+.chroma .c, .chroma .c1, .chroma .cm
 {
     color: #999;
 }
 
-.codehilite .c1
-{
-    color: #999;
-}
-
-.codehilite .cm
-{
-    color: #999;
-}
-
-.codehilite .cp
+.chroma .cp
 {
     color: #594;
 }
 
-.codehilite .nl
-{
-    color: #1481b8;
-}
-
-.codehilite .nt
-{
-    color: #1481b8;
-}
-
-.codehilite .err
+.chroma .nl, .chroma .nt, .chroma .err
 {
     color: #1481b8;
 }
@@ -433,7 +397,7 @@ footer
         font: italic 13px/22px "Merriweather", Georgia, serif;
     }
 
-    code, .codehilite
+    code, .chroma
     {
         font-size: 14px;
     }
