@@ -1,5 +1,5 @@
 +++
-title = "The Single Responsibility Principle"
+title = "76: The Single Responsibility Principle"
 weight = 76
 +++
 

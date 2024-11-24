@@ -1,5 +1,5 @@
 +++
-title = "Apply Functional Programming Principles"
+title = "2: Apply Functional Programming Principles"
 weight = 2
 +++
 

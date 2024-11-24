@@ -1,5 +1,5 @@
 +++
-title = "Simplicity Comes from Reduction"
+title = "75: Simplicity Comes from Reduction"
 weight = 75
 +++
 

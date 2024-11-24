@@ -1,5 +1,5 @@
 +++
-title = "Message Passing Leads to Better Scalability in Parallel Systems"
+title = "57: Message Passing Leads to Better Scalability in Parallel Systems"
 weight = 57
 +++
 

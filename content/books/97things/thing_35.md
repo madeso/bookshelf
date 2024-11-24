@@ -1,5 +1,5 @@
 +++
-title = "The Golden Rule of API Design"
+title = "35: The Golden Rule of API Design"
 weight = 35
 +++
 

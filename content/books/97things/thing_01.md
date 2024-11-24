@@ -1,5 +1,5 @@
 +++
-title = "Act with Prudence"
+title = "1: Act with Prudence"
 weight = 1
 +++
 

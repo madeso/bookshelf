@@ -1,5 +1,5 @@
 +++
-title = "Ask \"What Would the User Do?\" (You Are not the User)"
+title = "3: Ask \"What Would the User Do?\" (You Are not the User)"
 weight = 3
 +++
 

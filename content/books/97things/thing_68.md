@@ -1,5 +1,5 @@
 +++
-title = "Put Everything Under Version Control"
+title = "68: Put Everything Under Version Control"
 weight = 68
 +++
 

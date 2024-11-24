@@ -1,5 +1,5 @@
 +++
-title = "Thinking in States"
+title = "84: Thinking in States"
 weight = 84
 +++
 

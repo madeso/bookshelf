@@ -1,5 +1,5 @@
 +++
-title = "Improve Code by Removing It"
+title = "39: Improve Code by Removing It"
 weight = 39
 +++
 

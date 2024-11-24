@@ -1,5 +1,5 @@
 +++
-title = "Automate Your Coding Standard"
+title = "4: Automate Your Coding Standard"
 weight = 4
 +++
 

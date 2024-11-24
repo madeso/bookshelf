@@ -1,5 +1,5 @@
 +++
-title = "Inter-Process Communication Affects Application Response Time"
+title = "41: Inter-Process Communication Affects Application Response Time"
 weight = 41
 +++
 

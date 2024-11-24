@@ -1,5 +1,5 @@
 +++
-title = "How to Use a Bug Tracker"
+title = "38: How to Use a Bug Tracker"
 weight = 38
 +++
 

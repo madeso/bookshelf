@@ -1,5 +1,5 @@
 +++
-title = "Check Your Code First before Looking to Blame Others"
+title = "9: Check Your Code First before Looking to Blame Others"
 weight = 9
 +++
 

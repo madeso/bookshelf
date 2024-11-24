@@ -1,5 +1,5 @@
 +++
-title = "Before You Refactor"
+title = "6: Before You Refactor"
 weight = 6
 +++
 

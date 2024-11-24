@@ -1,5 +1,5 @@
 +++
-title = "Make Interfaces Easy to Use Correctly and Hard to Use Incorrectly"
+title = "55: Make Interfaces Easy to Use Correctly and Hard to Use Incorrectly"
 weight = 55
 +++
 

@@ -1,5 +1,5 @@
 +++
-title = "Deploy Early and Often"
+title = "20: Deploy Early and Often"
 weight = 20
 +++
 

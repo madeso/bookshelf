@@ -1,5 +1,5 @@
 +++
-title = "Write Small Functions Using Examples"
+title = "94: Write Small Functions Using Examples"
 weight = 94
 +++
 

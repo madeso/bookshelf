@@ -1,5 +1,5 @@
 +++
-title = "Encapsulate Behavior, not Just State"
+title = "32: Encapsulate Behavior, not Just State"
 weight = 32
 +++
 

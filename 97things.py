@@ -8,7 +8,9 @@ def fix(dir: str):
     print(dir)
 
     entries = (os.path.join(dir, p) for p in os.listdir(dir))
-    dirs = (p for p in entries if os.path.isdir(p))
+    dirs = list(p for p in entries if os.path.isdir(p))
+
+    print(f"{dir} has {len(dirs)} directories")
     for d in dirs:
         src = os.path.join(d, 'readme.md')
         lines = []
@@ -27,7 +29,7 @@ def fix(dir: str):
         escaped_title = title.replace('"', '\\"')
         with open(tgt, 'w') as f:
             f.write('+++\n')
-            f.write(f"title = \"{escaped_title}\"\n")
+            f.write(f"title = \"{weight}: {escaped_title}\"\n")
             f.write(f"weight = {weight}\n")
             f.write('+++\n')
             f.write(''.join(lines[1:]))

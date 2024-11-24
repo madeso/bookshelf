@@ -1,5 +1,5 @@
 +++
-title = "Choose Your Tools with Care"
+title = "10: Choose Your Tools with Care"
 weight = 10
 +++
 

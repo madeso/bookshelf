@@ -1,5 +1,5 @@
 +++
-title = "Two Wrongs Can Make a Right (and Are Difficult to Fix)"
+title = "86: Two Wrongs Can Make a Right (and Are Difficult to Fix)"
 weight = 86
 +++
 

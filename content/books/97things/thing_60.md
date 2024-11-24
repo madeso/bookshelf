@@ -1,5 +1,5 @@
 +++
-title = "News of the Weird: Testers Are Your Friends"
+title = "60: News of the Weird: Testers Are Your Friends"
 weight = 60
 +++
 

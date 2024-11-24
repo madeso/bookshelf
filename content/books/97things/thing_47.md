@@ -1,5 +1,5 @@
 +++
-title = "Know Your Next Commit"
+title = "47: Know Your Next Commit"
 weight = 47
 +++
 

@@ -1,5 +1,5 @@
 +++
-title = "Make the Invisible More Visible"
+title = "56: Make the Invisible More Visible"
 weight = 56
 +++
 

@@ -1,5 +1,5 @@
 +++
-title = "Resist the Temptation of the Singleton Pattern"
+title = "73: Resist the Temptation of the Singleton Pattern"
 weight = 73
 +++
 

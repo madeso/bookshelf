@@ -1,5 +1,5 @@
 +++
-title = "The Guru Myth"
+title = "36: The Guru Myth"
 weight = 36
 +++
 

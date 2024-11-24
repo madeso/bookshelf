@@ -1,5 +1,5 @@
 +++
-title = "Step Back and Automate, Automate, Automate"
+title = "78: Step Back and Automate, Automate, Automate"
 weight = 78
 +++
 

@@ -1,5 +1,5 @@
 +++
-title = "Prefer Domain-Specific Types to Primitive Types"
+title = "65: Prefer Domain-Specific Types to Primitive Types"
 weight = 65
 +++
 

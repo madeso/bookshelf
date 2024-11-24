@@ -1,5 +1,5 @@
 +++
-title = "Two Heads Are Often Better than One"
+title = "85: Two Heads Are Often Better than One"
 weight = 85
 +++
 

@@ -1,5 +1,5 @@
 +++
-title = "The Boy Scout Rule"
+title = "8: The Boy Scout Rule"
 weight = 8
 +++
 

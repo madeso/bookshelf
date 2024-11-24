@@ -1,5 +1,5 @@
 +++
-title = "Code Layout Matters"
+title = "13: Code Layout Matters"
 weight = 13
 +++
 
