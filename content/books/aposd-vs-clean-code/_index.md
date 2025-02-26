@@ -18,7 +18,7 @@ associated with APOSD](https://groups.google.com/g/software-design-book))*
 
 ## Introductions
 
-**JOHN:**
+#### John
 
 Hi (Uncle) Bob! You and I have each written books on software design.
 We agree on some things, but there are some pretty big differences of
@@ -26,11 +26,11 @@ opinion between my recent book *A Philosophy of Software Design*
 (hereafter "APOSD") and your classic book *Clean Code*. Thanks for
 agreeing to discuss those differences here.
 
-**UB:**
+#### UB
 
 My pleasure John.  Before we begin let me say that I've carefully read through your book and I found it very enjoyable, and full of valuable insights.  There are some things I disagree with you on, such as TDD, and Abstraction-First incrementalism, but overall I enjoyed it a lot.
 
-**JOHN:**
+#### John
 
 I'd like to discuss three topics with you: method length, comments,
 and test-driven development. But before getting into these,
@@ -61,13 +61,13 @@ more obvious.
 Now over to you: are there general principles that you use when deciding
 which ideas to endorse?
 
-**UB:**
+#### UB
 
 I agree with your approach. A discipline or technique should make the job of programmers easier. I would add that the programmer we want to help most is not the author.  The programmer whose job we want to make easier is the programmer who must read and understand the code written by others (or by themself a week later).  Programmers spend far more hours reading code than writing code, so the activity we want to ease is that of reading.
 
 ## Method Length
 
-**JOHN:**
+#### John
 
 Our first area of disagreement is method length.
 On page 34 of *Clean Code* you say "The first rule of functions is that
@@ -120,13 +120,13 @@ interfaces and entanglement.  Setting arbitrary numerical limits such
 as 2-4 lines in a method and a single line in the body of an
 `if` or `while` statement exacerbates this problem.
 
-**UB:**
+#### UB
 
 While I do strongly recommend very short functions, I don't think it's fair to say that the book sets arbitrary numerical limits. The 2-4 line functions that you referred to on page 34 were part of the _Sparkle_ applet that Kent Beck and I wrote together in 1999 as an exercise for learning TDD. I thought it was remarkable that most of the functions in that applet were 2-4 lines long because it was a Swing program; and Swing programs tend to have very long methods.
 
 As for setting limits, on page 13 I make clear that although the recommendations in the book have worked well for me and the other authors, they might not work for everyone.  I claimed no final authority, nor even any absolute "rightness". They are offered for consideration.
 
-**JOHN:**
+#### John
 
 I think these problems will be easiest to understand if we look at
 specific code examples. But before we do that, let me ask you, Bob:
@@ -134,7 +134,7 @@ do you believe that it's possible for code to be over-decomposed, or
 is smaller always better? And, if you believe that over-decomposition
 is possible, how do you recognize when it has occurred?
 
-**UB:**
+#### UB
 
 It is certainly possible to over-decompose code.  Here's an example:
 
@@ -144,7 +144,7 @@ void doSomething() {doTheThing()} // over-decomposed.
 
 The strategy that I use for deciding how far to take decomposition is the old rule that a method should do "*One Thing*".  If I can *meaningfully* extract one method from another, then the original method did more than one thing.  "Meaningfully" means that the extracted functionality can be given a descriptive name; and that it does less than the original method.
 
-**JOHN:**
+#### John
 
 Unfortunately the One Thing approach will lead to over-decompositon:
 
@@ -154,7 +154,7 @@ Unfortunately the One Thing approach will lead to over-decompositon:
 
  3. The One Thing approach is simply wrong in many cases. If two things are closely related, it might well make sense to implement them in a single method. For example, any thread-safe method will first have to acquire a lock, then carry out its function. These are two "things", but they belong in the same method.
 
-**UB:**
+#### UB
 
 Let me tackle the last thing first.  You suggested that locking the thread, and preforming a critical section should be together in the same method.  However, I would be tempted to separate the locking from the critical section.
 
@@ -202,7 +202,7 @@ void clearTotals() {
 
 The latter has a nice descriptive name that is abstract enough to be meaningful without being redundant.  And the two lines together are strongly related so as to qualify for doing _one thing_: initialization.
 
-**JOHN:**
+#### John
 
 Of course anything can be abused. But the best approaches to design
 encourage people to do things the right way and discourage abuse.
@@ -223,13 +223,13 @@ One of the reasons I use the deep/shallow characterization is that it
 captures both sides of the tradeoff; it will tell you when a decomposition
 is good and also when decomposition makes things worse.
 
-**UB:**
+#### UB
 
 You make a good point that I don't talk much, in the book, about how to make the judgement call.  Back in 2008 my concern was breaking the habit of the very large functions that were common in those early days of the web.  I have been more balanced in the 2d ed.
 
 Still, if I must err, I'd rather err on the side of decomposition.  There is value in considering, and visualizing decompositions.  They can always be inlined if we judge them to have gone too far.
 
-**JOHN:**
+#### John
 
 Coming back to your `clearTotals` example:
 
@@ -245,7 +245,7 @@ Coming back to your `clearTotals` example:
 * Without seeing more context I'm skeptical that the `clearTotals`
   method makes sense.
 
-**UB:**
+#### UB
 
 I hope you agree that between these two examples, the former is a bit better.
 
@@ -266,16 +266,16 @@ public String makeStatement() {
 }
 ```
 
-**JOHN:**
+#### John
 
 Well, actually, no. The second example is completely clear and obvious:
 I don't see anything to be gained by splitting it up.
 
-**SPOCK (a.k.a UB):**
+#### SPOCK (a.k.a UB)
 
 Fascinating.
 
-**JOHN:**
+#### John
 
 I think it will be easier to clarify our differences if we consider
 a nontrivial code example. Let's look at the `PrimeGenerator` class from
@@ -358,7 +358,7 @@ properly exemplifies the design philosophy of *Clean Code* and this
 is the way you believe the code should appear if it were used in
 production)?
 
-**UB:**
+#### UB
 
 Ah, yes.  The `PrimeGenerator`.  This code comes from the 1982 paper on [*Literate Programming*](https://www.cs.tufts.edu/~nr/cs257/archive/literate-programming/01-knuth-lp.pdf) written by Donald Knuth.  The program was originally written in Pascal, and was automatically generated by Knuth's WEB system into a single very large method which I translated into Java.
 
@@ -405,7 +405,7 @@ public class PrimeGenerator {
 
 Even though I was done with the lesson of the chapter, I didn't want to leave that method looking so outdated.  So I cleaned it up a bit as an afterthought.  My goal was not to describe how to generate prime numbers.  I wanted my readers to see how large methods, that violate the Single Responsibility Principle, can be broken down into a few smaller well-named classes containing a few smaller well-named methods.
 
-**JOHN:**
+#### John
 
 Thanks for the background. Even though the details of that code weren't
 the main point of the chapter, presumably the code represents what you think
@@ -425,11 +425,11 @@ methods and load all of that code into your mind at once. For example,
 `isNot...` has side effects (it modifies `multiplesOfPrimeFactors`) but
 you can't see that unless you read all three methods.
 
-**UB:**
+#### UB
 
 I think you have a point.  Eighteen years ago, when I was in the throes of this refactoring, the names and structure made perfect sense to me.  They make sense to me now, too -- but that's because I once again understand the algorithm.  When I returned to the algorithm for the first time a few days ago, I  struggled with the names and structure.  Once I understood the algorithm the names and structure made perfect sense.
 
-**JOHN:**
+#### John
 
 Those names are problematic even for someone who understands the algorithm;
 we'll talk about them a bit later, when discussing comments. And, if code
@@ -437,11 +437,11 @@ no longer makes sense to the writer when the writer returns to the code later,
 that means the code is problematic. The fact that code can eventually
 be understood (with great pain and suffering) does not excuse its entanglement.
 
-**UB:**
+#### UB
 
 Would that we had such a crystal ball that we could help our future selves avoid such "_great pain and suffering_".  ;-)
 
-**JOHN:**
+#### John
 
 There is no need for a crystal ball. The problems with `PrimeGenerator` are
 pretty obvious, such as the entanglement and interface complexity; maybe you
@@ -449,11 +449,11 @@ were surprised that it is hard to understand, but I am not. Said another
 way, if you are unable to predict whether your code will be easy to
 understand, there are problems with your design methodology.
 
-**UB:**
+#### UB
 
 Fair enough.  I will say, however, that I had equal "_pain and suffering_" interpreting your rewrite (below).  So, apparently, neither of our methodologies were sufficient to rescue our readers from such struggles.
 
-**JOHN:**
+#### John
 
 Going back to my introductory remarks about complexity, splitting up
 `isNot...` into three methods doesn't reduce the amount of information
@@ -464,7 +464,7 @@ to flip back and forth between the methods, effectively reconstructing a
 monolithic version in their minds. Because the pieces are all related,
 this code will be easiest to understand if it's all together in one place.
 
-**UB:**
+#### UB
 
 I disagree.  Here is `isNotMultipleOfAnyPreviousPrimeFactor`.
 
@@ -482,7 +482,7 @@ If you trust the `isMultipleOfNthPrimeFactor` method, then this method stands al
 
 Now it would be fair to ask the question how we determine whether the candidate is a multiple, and in that case you'd want to inspect the `isMultiple...` method.
 
-**JOHN:**
+#### John
 
 This code does appear to be simple and obvious.
 Unfortunately, this appearance is deceiving.
@@ -498,7 +498,7 @@ hides this important information from the reader.
 If there is one thing more likely to result in bugs than not understanding code,
 it's thinking you understand it when you don't.
 
-**UB:**
+#### UB
 
 That's a valid concern.  However, it is tempered by the fact that the functions are presented in the order they are called.  Thus we can expect that the reader has already seen the main loop and understands that `candidate` increases by two each iteration.
 
@@ -514,7 +514,7 @@ for (Employee e : employees)
 
 This would not be made more understandable if we replaced those two method calls with the their implementations.  Such a replacement would simply obscure the intent.
 
-**JOHN:**
+#### John
 
 This example works because the called methods are relatively independent of
 the parent. Unfortunately that is not the case for `isNot...`.
@@ -527,11 +527,11 @@ make sure that `candidate` never decreases from one call to the next.
 Separating `isNot...` from the loop that invokes it makes it harder
 for readers to convince themselves that it works.
 
-**UB:**
+#### UB
 
 Which, as I said before, is why the methods are ordered the way they are.  I expect that by the time you get to `isNot...` you've already read `checkOddNumbersForSubsequentPrimes` and know that `candidate` increases by twos.
 
-**JOHN:**
+#### John
 
 Let's discuss this briefly, because it's another area where I
 disagree with *Clean Code*. If methods are entangled, there is no
@@ -543,11 +543,11 @@ the loop context before they get to `isNot...`. Furthermore, the actual
 code that creates a dependency on the loop isn't in `isNot...`: it's in
 `smallestOdd...`, which is even farther away from `checkOdd...`.
 
-**UB:**
+#### UB
 
 I sincerely doubt anyone is going to forget that `candidate` is being increased by twos.  It's a pretty obvious way to avoid waste.
 
-**JOHN:**
+#### John
 
 In my opening remarks I talked about how it's important to reduce the
 amount of information people have to keep in their minds at once.
@@ -577,7 +577,7 @@ Bob, can you help me understand why you divided the code into such
 tiny methods?
 Is there some benefit to having so many methods that I have missed?
 
-**UB:**
+#### UB
 
 I think you and I are just going to disagree on this.  In general I believe in the principle of small well-named methods and the separation of concerns. Generally speaking if you can break a large method into several well-named smaller methods with different concerns, and by doing so expose their interfaces, and the high level functional decomposition, then that's a good thing.
 
@@ -595,7 +595,7 @@ Now perhaps you are concerned that in my solution the "flipping" is a longer dis
 
 ### Method Length Summary
 
-**JOHN:**
+#### John
 
 It sounds like it's time to wrap up this section. Is this a reasonable
 summary of where we agree and disagree?
@@ -630,14 +630,14 @@ summary of where we agree and disagree?
 * You believe that ordering the methods in a class can help to
   compensate for entanglement between methods; I don't.
 
-**UB:**
+#### UB
 
 I think this is a fair assessment of our agreements and disagreements.  We both value decomposition,
 and we both avoid entanglement; but we disagree on the relative weighting of those two values.
 
 ## Comments
 
-**JOHN:**
+#### John
 
 Let's move on to the second area of disagreement: comments. In my opinion,
 the *Clean Code* approach to commenting results in code with
@@ -658,7 +658,7 @@ still makes me cringe. This stigmatizes writing comments. Junior developers
 will think "if I write comments, people may think I've failed, so the
 safest thing is to write no comments."
 
-**UB:**
+#### UB
 
 That chapter begins with these words:
 >*Nothing can be quite so helpful as a well placed comment.*
@@ -667,7 +667,7 @@ It goes on to say that comments are a *necessary* evil.
 
 The only way a reader could infer that they should write no comments is if they hadn't actually read the chapter.  The chapter walks through a series of comments, some bad, some good.
 
-**JOHN:**
+#### John
 
 *Clean Code* focuses a lot more on the "evil" aspects of comments than the
 "necessary" aspects. The sentence you quoted above is followed by two
@@ -678,11 +678,11 @@ not to write". And "Comments are always failures" is so catchy
 that it's the one thing readers are most likely to remember from the
 chapter.
 
-**UB:**
+#### UB
 
 The difference in page count is because there are just a few ways to write good comments, and so many more ways to write bad ones.
 
-**JOHN:**
+#### John
 
 I disagree; this illustrates your bias against comments. If you look at
 Chapter 13 of APOSD, it finds a lot more
@@ -690,7 +690,7 @@ constructive ways to use comments than *Clean Code*. And if you compare
 the tone of Chapter 13 of APOSD with Chapter 4 of *Clean Code*, the hostility
 of *Clean Code* towards comments becomes pretty clear.
 
-**UB:**
+#### UB
 
 I'll leave you to balance that last comment with the initial statement, and the final example, in the _Comments_ chapter. They do not communicate "hostility".
 
@@ -702,7 +702,7 @@ As a result it became conventional wisdom to write comments by default.  And, in
 
 In _Clean Code_ I decided to fight that mindset.  Comments can be _really bad_ as well as good.
 
-**JOHN:**
+#### John
 
 I don't agree that comments are less necessary today than they were
 40 years ago.
@@ -714,13 +714,13 @@ information, developers can make code dramatically easier to read.
 This is not a "failure of their ability to express themselves", as you
 put it.
 
-**UB:**
+#### UB
 
 It's very true that there is important information that is not, or cannot be, expresssed in code.  That's a failure.  A failure of our languages, or of our ability to use them to express ourselves.  In every case a comment is a failure of our ability to use our languages to express our intent.
 
 And we fail at that very frequently, and so comments are a necessary evil -- or, if you prefer, _an unfortunate necessity_.  If we had the perfect programming language (TM) we would never write another comment.
 
-**JOHN:**
+#### John
 
 I don't agree that a perfect programming language would
 eliminate the need for comments. Comments and code serve very different
@@ -731,11 +731,11 @@ Why do you feel that information about a program should
 be expressed entirely in code, rather than using a combination of code
 and English?
 
-**UB:**
+#### UB
 
 I bemoan the fact that we must sometimes use a human language instead of a programming language.  Human languages are imprecise and full of ambiguities. Using a human language to describe something as precise as a program is very hard, and fraught with many opportunities for error and inadvertent misinformation.
 
-**JOHN:**
+#### John
 
 I agree that English isn't always as precise as code, but it can still be
 used in precise ways and comments typically don't need the same
@@ -745,11 +745,11 @@ as *why* something is being done, or the overall idea of something.
 English works better for these than code because it is a more
 expressive language.
 
-**UB:**
+#### UB
 
 I have no argument with that statement.
 
-**JOHN:**
+#### John
 
 Are you concerned that comments will be incorrect or
 misleading and that this will slow down software development?
@@ -763,13 +763,13 @@ unusual for me to spend 50-80% of my development time wading through
 code to figure out things that would be obvious if the code was properly
 commented.
 
-**UB:**
+#### UB
 
 You and I have had some very different experiences.
 
 I have certainly been helped by well placed comments.  I have also, just as certainly, (and within this very document) been distracted and confused by a comment that was incorrect, misplaced, gratuitous, or otherwise just plain bad.
 
-**JOHN:**
+#### John
 
 I invite everyone reading this article to ask yourself the following questions:
 
@@ -785,13 +785,13 @@ discourage people from writing comments.
 Let's consider the `PrimeGenerator` class. There is not a single comment
 in that code; does this seem appropriate to you?
 
-**UB:**
+#### UB
 
 I think it was appropriate for the purpose for which I wrote it. It was an adjunct to the lesson that very large methods can be broken down into smaller classes containing smaller methods. Adding lots of explanatory comments would have detracted from that point.
 
 In general, however, the commenting style I used in Listing 4-8 is more appropriate.  That listing, at the very end of the *Comments* chapter, describes yet another `PrimeGenertor` with a slightly different algorithm, and a better set of comments.
 
-**JOHN:**
+#### John
 
 I disagree that adding comments would have distracted from your point,
 and I think Listing 4-8 is also woefully undercommented.
@@ -826,7 +826,7 @@ In my opinion, the traditional approach of using shorter names with
 descriptive comments is more convenient and conveys the required information
 more effectively. What advantage is there in the approach you advocate?
 
-**UB:**
+#### UB
 
 "_Megasyllabic_": Great word!
 
@@ -839,7 +839,7 @@ if (isTooHot)
 
 I also follow a simple rule about the length of names.  The larger the scope of a method, the shorter its name should be and vice-versa -- the shorter the scope the longer the  name.  The private methods I extracted in this case live in very small scopes, and so have longish names.  Methods like this are typically called from only one place, so there is no burden on the programmer to remember a long name for another call.
 
-**JOHN:**
+#### John
 
 Names like `isTooHot` are totally fine by me.
 My concern is about names like `isLeastRelevantMultipleOfLargerPrimeFactor`.
@@ -852,13 +852,13 @@ supporting evidence for
 my assertion a while back that the more you split up a method,
 the shallower the resulting methods will be.
 
-**UB:**
+#### UB
 
 It's not the functions that get smaller, it's the scope that gets smaller.  A private function has a smaller scope than the public function that calls it.  A function called by that private function has an even smaller scope.  As we descend in scope, we also descend in situational detail.  Describing such detail often requires a long name, or a long comment.  I prefer to use a name.
 
 As for long names being hard to parse, that's a matter of practice.  Code is full of things that take practice to get used to.
 
-**JOHN:**
+#### John
 
 I don't accept this. Code may be full of things that take practice to get used
 to, but that doesn't excuse it.
@@ -877,22 +877,22 @@ is not OK to make excuses or suggest that it is really the reader's problem
 ("you just don't have enough practice"). I'm going to have to live by this
 same rule a bit later in our discussion.
 
-**UB:**
+#### UB
 
 Fair enough.  As for the meaning of "leastRelevant", that's a much larger problem that you and I will encounter shortly.  It has to do with the intimacy that the author has with the solution, and the reader's lack of that intimacy.
 
-**JOHN:**
+#### John
 
 You still haven't answererd my question: why is it better to use super-long names
 rather than shorter names augmented with descriptive comments?
 
-**UB:**
+#### UB
 
 It's a matter of preference for me.  I prefer long names to comments.  I don't trust comments to be maintained, nor do I trust that they will be read.  Have you ever noticed that many IDEs paint comments in light grey so that they can be easily ignored?  It's harder to ignore a name than a comment.
 
 (BTW, I have my IDE paint comments in bright fire-engine red)
 
-**JOHN:**
+#### John
 
 I don't see why a monster name is more likely to be "maintained" than
 a comment, and I don't agree that IDEs encourage people to ignore
@@ -918,7 +918,7 @@ much simpler than the code of the method (it omits implementation details),
 so the comments reduce the amount of information people must have in
 their heads.
 
-**UB:**
+#### UB
 
 Long ago, in a 1995 book, I defined abstraction as:
 >*The amplification of the essential and the elimination of the irrelevant.*
@@ -933,7 +933,7 @@ addSongToLibrary(String title, String[] authors, int durationInSeconds);
 
 This seems like a very nice abstraction to me, and I cannot imagine how a comment might improve it.
 
-**JOHN:**
+#### John
 
 Our definitions of abstraction are very similar; that's good to see.
 However, the `addSongToLibrary` declaration is not (yet) a good abstraction
@@ -958,7 +958,7 @@ needed to use it, but this is pretty rare. Just skim through the documentation
 for your favorite library package: in how many cases could you understand how
 to use a method with only its signature?
 
-**UB:**
+#### UB
 
 Yes, there are times when the signature of a method is an incomplete abstraction and a comment
 is required.  This is especially true when the interface is part of a public API, or an API intended
@@ -967,7 +967,7 @@ comments on interfaces are often more of an impediment than a help.  The team ha
 internals of the system, and will generally be able to understand an interface simply from its
 signature.
 
-**JOHN:**
+#### John
 
 In one of our in-person discussions you argued that interface comments
 are unnecessary because when a group of developers is working on a body
@@ -983,11 +983,11 @@ and probably making mistakes along the way. Spending a few minutes to
 document the interfaces would save time, reduce cognitive load, and
 reduce bugs.
 
-**UB:**
+#### UB
 
 I think that certain interfaces need comments, even if they are private to the team.  But I think it is more often the case that the team is familiar enough with the system that well named methods and arguments are sufficient.
 
-**JOHN:**
+#### John
 
 Let's consider a specific example from `PrimeGenerator`: the `isMultipleOfNthPrimeFactor`
 method. When someone reading the code encounters the call to `isMultiple...`
@@ -1015,13 +1015,13 @@ Here is my first attempt at a header comment for `isMultiple`:
 
 What do you think of this?
 
-**UB:**
+#### UB
 
 I think it's accurate.  I wouldn't delete it if I encountered it.  I don't think it should be a javadoc.
 
 The first sentence is redundant with the name `isMultipleOfNthPrimeFactor` and so could be deleted.  The warning of the side effect is useful.
 
-**JOHN:**
+#### John
 
 I agree that the first sentence is largely redundant with the name,
 and I debated with myself about whether to keep it. I decided to keep it
@@ -1034,7 +1034,7 @@ By the way, you complained earlier about comments being less precise than
 code, but in this case the comment is *more* precise (the method
 name can't include text like `primes[n]`).
 
-**UB:**
+#### UB
 
 Fair enough.  There are times when precision is better expressed in a comment.
 
@@ -1045,20 +1045,20 @@ until I understand why they are there.  I'm also going to have to worry if
 they are accurate.  So I'm going to have to read the code to understand and
 validate the comment.
 
-**JOHN:**
+#### John
 
 Whoah. That loud sound you just heard was my jaw hitting the floor.
 Help me understand this a bit better: approximately what
 fraction of comments that you encounter in practice are you willing to
 trust without reading the code to verify them?
 
-**UB:**
+#### UB
 
 I look at every comment as potential misinformation.  At best they are a way to crosscheck the author's intent against the code. The amount of credence I give to a comment depends a lot on how easy they make that crosscheck.  When I read a comment that does not cause me to crosscheck, then I consider it to be of no value.  When I see a comment that causes me to crosscheck, and when that crosscheck turns out to be valuable, then that's a really good comment.
 
 Another way to say this is that the best comments tell me something surprising and verifiable about the code.  The worst are those that waste my time telling me something obvious, or incorrect.
 
-**JOHN:**
+#### John
 
 It sounds like your answer is 0%: you don't trust any comment unless it has
 been verified against the code. This makes no sense to me. As I said above, the vast
@@ -1081,7 +1081,7 @@ implementation are expected to remain the same and which parts may
 change (there is no way to specify this "contract" in code). This will
 result in misunderstanding and more bugs.
 
-**UB:**
+#### UB
 
 Well, I guess I've just been burned more than you have.  I've gone down too many false comment induced rabbit holes, and wasted too much time on worthless word salads.
 
@@ -1092,7 +1092,7 @@ As I said above, our IDEs tend to paint comments in an ignorable color.  I have 
 
 By the same token I use long names as a subsitute for comments because I intend for those long names to be read; and it is very hard for a programmer to ignore names.
 
-**JOHN:**
+#### John
 
 I mentioned earlier that there are two general reasons why comments are
 needed. So far we've been discussing the first reason (abstraction).
@@ -1131,7 +1131,7 @@ so it needs to be made available.
 Do you agree that there should be comments to explain each of these
 two issues?
 
-**UB:**
+#### UB
 
 I agree that the algorithm is subtle.  Setting the first prime multiple as the square of the prime was deeply mysterious at first.  I had to go on an hour long bike ride to understand it.
 
@@ -1154,7 +1154,7 @@ One solution is to paint a picture -- being worth a thousand words.  Here's my a
 
 I expect that our readers will have to stare at this for some time, and also look at the code.  But then there will be a _click_ in their brains and they'll say "Ohhh!  Yes!  I see it now!"
 
-**JOHN:**
+#### John
 
 I found this diagram very hard to understand.
 It begs for supplemental English text to explain the ideas being
@@ -1176,19 +1176,19 @@ not left for the reader to deduce. Ideally, even if a reader is in a hurry
 and doesn't read the code very carefully, their first guesses about how
 things work (and why) should be correct. To me, that's clean code.
 
-**UB:**
+#### UB
 
 I don't disagree with your sentiment.  Good clean code should be as easy as possible to understand.  I want to give my readers as many clues as possible so that the code is intuitive to read.
 
 That's the goal.  As we are about to see, that can be a tough goal to achieve.
 
-**JOHN:**
+#### John
 
 In that case, do you still stand by the "picture" you painted above? It doesn't
 seem consistent with what you just said. And if you really wanted to give
 your readers as many clues as possible, you'd include a lot more comments.
 
-**UB:**
+#### UB
 
 I stand by the picture as far as it's accuracy is concerned.  And I think it
 makes a good crosscheck.  I have no illusions that it is easy to understand.
@@ -1199,7 +1199,7 @@ someone willing to do the work to understand it.
 
 ### Comments Summary
 
-**JOHN:**
+#### John
 
 Let's wrap up this section of the discussion. Here is my summary of
 where we agree and disgree.
@@ -1243,7 +1243,7 @@ as much code as you do. You think this exposes me to too much risk.
 
 Overall, we struggled to find areas of agreement on this topic.
 
-**UB:**
+#### UB
 
 This is a fair assessment of our individual positions; which I assume are based on our
 different individual experiences.  Over the years I have found the vast majority
@@ -1252,7 +1252,7 @@ help in the comments you have encountered.
 
 ## John's Rewrite of PrimeGenerator
 
-**JOHN:**
+#### John
 
 I mentioned that I ask the students in my software design class to rewrite
 `PrimeGenerator` to fix all of its design problems. Here is my rewrite
@@ -1335,7 +1335,7 @@ couple of overall things:
 * There is only one method. I didn't subdivide it because I felt the method already divides naturally into pieces that are distinct and understandable. It didn't seem to me that pulling out methods would improve readability significantly. When students rewrite the code, they typically have 2 or 3 methods, and those are usually OK too.
 * There are a *lot* of comments. It's extremely rare for me to write code with this density of comments. Most methods I write have no comments in the body, just a header comment describing the interface. But this code is subtle and tricky, so it needs a lot of comments to make the subtleties clear to readers. The long length of some of the comments is a red flag indicating that I struggled to find a clear and simple explanation for the code. Even with all the additional explanatory material this version is a bit shorter than the original (65 lines vs. 70).
 
-**UB:**
+#### UB
 
 I presume this is a complete rewrite.  My guess is that you worked to understand the algorithm from *Clean Code* and then wrote this from scratch.  If that's so, then fair enough.
 
@@ -1478,7 +1478,7 @@ We were inside the box trying to communicate to those who stood outside and coul
 
 The bottom line is that it is very difficult to explain something to someone who is not intimate with the details you are trying to explain. Often our explanations make sense only after the reader has worked out the details for themself.
 
-**JOHN:**
+#### John
 
 There's a lot of stuff in your discussion above, but I think it all boils down
 to one thing: you don't like the comments that I wrote. As I mentioned earlier,
@@ -1492,11 +1492,11 @@ comments for this code (or any code). You argue above that there is simply nothi
 comments can do to make the code easier to understand; the only way to
 understand the code is to read the code. That is a cop-out.
 
-**UB:**
+#### UB
 
 Sorry to interrupt you; but I think you are overstating my position.  I certainly never said that comments can never be helpful.  Sometimes, of course, they are.  What I said was that I only trust them if the code validates them.  Sometimes a comment will make that validation a lot easier.
 
-**JOHN:**
+#### John
 
 You keep saying that you sometimes find use for comments, but the reality
 is that "sometimes" almost never occurs in your code. We'll see this when
@@ -1593,13 +1593,13 @@ something to someone who is not intimate with the details you are trying
 to explain." And yet, it is our responsibility as programmers to do exactly
 that.
 
-**UB:**
+#### UB
 
 I'm glad we agree.  We also agree about getting others to review the code and make recommendations on the code _and_ the comments.
 
 ## Bob's Rewrite of PrimeGenerator2
 
-**UB:**
+#### UB
 
 When I saw your solution, and after I gained a good understanding of it.  I refactored it just a bit.  I loaded it into my IDE, wrote some simple tests, and extracted a few simple methods.
 
@@ -1674,7 +1674,7 @@ public class PrimeGenerator3 {
 }
 ```
 
-**JOHN:**
+#### John
 
 This version is a considerable improvement over the version in *Clean Code*.
 Reducing the number of methods made the code easier to read and resulted
@@ -1744,7 +1744,7 @@ had this feature; the alternative is awkward code where you set a variable,
 then exit one level of loop, then check the variable and exit the next
 level.
 
-**UB:**
+#### UB
 
 Good catch!  I would have caught that too had I thought to profile the solution.  You are right that separating the two loops added some unecessary iteration.  I found a nice way to solve that problem without using the horrible `continue`.  My updated version is now faster than yours!  A million primes in 440ms as opposed to yours which takes 561ms.  ;-) Below are just the changes.
 
@@ -1773,14 +1773,14 @@ private static boolean candidateIsPrime() {
 }
 ```
 
-**JOHN:**
+#### John
 
 Yep, that fixes the problem. I note that you are now down to 4 methods,
 from 8 in the *Clean Code* version.
 
 ## Test-Driven Development
 
-**JOHN:**
+#### John
 
 Let's move on to our third area of disagreement, which is Test-Driven
 Development. I am a huge fan of unit testing. I believe that unit tests are
@@ -1792,7 +1792,7 @@ that tests must be written before code and that code must be written
 and tested in tiny increments. This approach has serious problems
 without any compensating advantages that I have been able to identify.
 
-**UB:**
+#### UB
 
 As I said at the start I have carefully read _A Philosophy of Software Design_. I found it to be full of worthwhile insights, and I strongly agree with most of the points you make.
 
@@ -1812,7 +1812,7 @@ A little thought will convince you that these three laws will lock you into a cy
 
 A second layer of TDD is the Red-Green-Refactor loop.  This loop is several minutes long.  It is comprised of a few cycles of the three laws, followed by a period of reflection and refactoring.  During that reflection we pull back from the intimacy of the quick cycle and look at the design of the code we've just written.  Is it clean?  Is it well structured?  Is there a better approach?  Does it match the design we are pursuing?  If not, should it?
 
-**JOHN:**
+#### John
 
 Oops! I plead "guilty as charged" to inaccurately describing TDD.
 I will fix this in the next revision of APOSD. That said, your definition
@@ -1838,12 +1838,12 @@ lines), then writes unit tests for that code. As with TDD, the
 code isn't considered to be "working" until it has comprehensive unit
 tests.
 
-**UB:**
+#### UB
 
 How about if we call this technique "bundling" for purposes of this
 document?  This is the term I use in _Clean Code 2d ed._
 
-**JOHN:**
+#### John
 
 Fine by me.
 
@@ -1858,7 +1858,7 @@ process around design, not tests.
 To start our discussion, can you make a list of the advantages you
 think that TDD provides over the approach I just described?
 
-**UB:**
+#### UB
 The advantages I usually attribute to TDD are:
 
 * Very little need for debugging.  After all, if you just saw everything working a minute or two ago, there's not much to debug.
@@ -1877,7 +1877,7 @@ Above you suggested that bundling is to encourage design.  I think encouraging d
 
 Once you have that vision in your head it seems to me bundling and TDD will yield similar results.
 
-**JOHN:**
+#### John
 
 First, let me address the four advantages you listed for TDD:
 
@@ -1893,11 +1893,11 @@ First, let me address the four advantages you listed for TDD:
   triggered. Hard-to-debug problems arise from the accumulated complexity
   of the system, not from the size of the code increments.
 
-	>**UB:** True.  However, when the cycles are very short then the cause
+	>**UB**: True.  However, when the cycles are very short then the cause
 	of even the gnarliest of bugs have the best chance of being tracked down.
 	The shorter the cycles, the better the chances.
 
-	>**JOHN:** This is only true up to a point. I think you believe
+	>**John**: This is only true up to a point. I think you believe
 	that making units smaller and smaller continues to provide benefits,
 	with almost no limit to how small they can get. I think that there
 	is a point of diminishing returns, where making things even smaller
@@ -1911,7 +1911,7 @@ First, let me address the four advantages you listed for TDD:
   interface by reading a bunch of unit tests seems much more difficult
   than just reading a couple of sentences of English text.
 
-	>**UB:** Nowadays it's very easy to find the tests for
+	>**UB**: Nowadays it's very easy to find the tests for
 	a function by using the "where-used" feature of the IDE.  As for comments
 	being better, if that were true then no one would publish example code.
 
@@ -1919,19 +1919,19 @@ First, let me address the four advantages you listed for TDD:
   It's not clear to me that designing for testability will produce the
   best design.
 
-	>**UB:** Generally the decoupling arises because the test requires a mock
+	>**UB**: Generally the decoupling arises because the test requires a mock
 	of some kind.  Mocks tend to force abstractions that might otherwise not exist.
 
-	>**JOHN:** In my experience, mocking virtually never changes interfaces;
+	>**John**: In my experience, mocking virtually never changes interfaces;
 	it just provides replacements for existing (typically immovable)
 	interfaces.
 
-	>**UB:** Our experiences differ.
+	>**UB**: Our experiences differ.
 
 * Enabling fearless refactoring? BINGO! This is the where almost all of the
   benefits from unit testing come from, and it is a really really big deal.
 
-	>**UB:** Agreed.
+	>**UB**: Agreed.
 
 I agree with your conclusion that TDD and bundling are about the
 same in terms of providing these benefits.
@@ -1997,7 +1997,7 @@ But starting with design will reduce the amount of bad code you write and
 get you to a good design sooner. It is possible to produce equally good
 designs with TDD; it's just harder and requires a lot more discipline.
 
-**UB:**
+#### UB
 
 I'll address your points one at a time.
 
@@ -2009,7 +2009,7 @@ I'll address your points one at a time.
 
 * It's not clear to me why the act of writing tests late is a better design choice.  There's nothing in TDD that prevents me from thinking through a design long before I write the very first tested code.
 
-**JOHN:**
+#### John
 
 You say there is nothing about TDD that stops developers from thinking ahead
 about design. This is only partly true. Under TDD I can think ahead, but I
@@ -2028,13 +2028,13 @@ In all of the TDD materials you have shown me, I have not seen any
 warnings about the dangers of becoming so tactical with TDD that
 design never occurs (perhaps you don't even view this as a serious risk?).
 
-**UB:**
+#### UB
 
 I usually use an abbeviated form of UML to capture my early design decisions.  I have no objection to capturing them in pseudo-code, or even real code.  However, I would not commit any such pre-written code.  I would likely hold it in a text file, and consult it while following the TDD cycle.  I might feel safe enough to copy and paste from the text file into my IDE in order to make a failing test pass.
 
 The Bowling game is an example of how wildly our initial design decisions can  deviate from our eventual solutions.  It's true that introductory videos often do not expose the depth of a discipline.
 
-**JOHN:**
+#### John
 
 As I was watching your TDD video for the second time, you said something
 that jumped out at me:
@@ -2051,7 +2051,7 @@ difficult; the most important thing is having the discipline to do it.
 Getting a good design is really hard, even if you are very disciplined;
 that's why it needs to be the center of attention.
 
-**UB:**
+#### UB
 
 TDD is a coding discipline.  Of course design comes before coding -- I don't know anyone who thinks otherwise.  Even the Bowling Game video made that point. But, as we saw in the Bowling Game video, sometimes the code will take you in a very different direction.
 
@@ -2060,7 +2060,7 @@ That difference does't imply that the design shouldn't have been done.  It just 
 As Eisenhower once said:
 >“In preparing for battle I have always found that plans are useless, but planning is indispensable.”
 
-**JOHN:**
+#### John
 
 You ask why writing tests later is a better design choice. It isn't.
 The benefit of the bundled approach doesn't come from writing tests later;
@@ -2069,11 +2069,11 @@ consequence of this choice. The tests are still written pretty early-on
 with the bundled approach, so I don't think the delay causes significant
 problems.
 
-**UB:**
+#### UB
 
 I think we simply disagree that TDD discourages design.  The practice of TDD does not discourage me from design; because I value design.  I would suggest that those who do not value design will not design, no matter what discipline they practice.
 
-**JOHN:**
+#### John
 
 You claim that the problems I worry about with TDD simply don't happen in
 practice. Unfortunately I have heard contrary claims from senior
@@ -2085,12 +2085,12 @@ cases were outliers.
 But the problems reported to me line up exactly with what I would
 expect to happen, given the tactical nature of TDD.
 
-**UB:**
+#### UB
 
 My experience differs. I've worked on many projects where TDD has been used
 effectively and profitably.  I'm sure the senior developers that you trust are telling you the truth about their experience.  Having never seen TDD lead to such bad outcomes myself, I sincerely doubt that the blame can be traced to TDD.
 
-**JOHN:**
+#### John
 
 You ask me to trust your extensive experience with
 TDD, and I admit that I have no personal experience with TDD.
@@ -2108,11 +2108,11 @@ Overall, TDD is in a bad place on the risk-reward spectrum. In comparison
 to the bundling approach, the downside risks for poor code quality in TDD
 are huge, and I don't see enough upside reward (if any) to compensate.
 
-**UB:**
+#### UB
 
 All I can say to that is that your opinion is based on a number of false impressions and speculations, and not upon direct experience.
 
-**JOHN:**
+#### John
 
 Now let me ask you a couple of questions.
 
@@ -2120,12 +2120,12 @@ First, at a microscopic level, why on earth does TDD prohibit developers
 from writing more code than needed to pass the current test? How does
 enforcing myopia make systems better?
 
->**UB:**
+>**UB**:
 The goal of the discipline is to make sure that everything is tested.
 One good way to do that is to refuse to write any code unless it is to make a failing test pass.  Also, working in such short cycles provides insights into
 the way the code is working.  Those insights often lead to better design decisions.
 
->**JOHN:**
+>**John**:
 I agree that seeing code (partially) working can provide insights. But
 surely that benefit can be had without such a severe restriction on
 how developers think?
@@ -2134,10 +2134,10 @@ Second, at a broader level, do you think TDD is likely to produce better
 designs than approaches that are more design-centric, such as the bundling
 approach I described? If so, can you explain why?
 
->**UB:**
+>**UB**:
 My guess is that someone adept at bundling, and someone adept at TDD would produce very similar designs, with very similar test coverage.  I would also venture to guess that the TDDer would be somewhat more productive than the bundler if for no reason other than that the TDDer finds and fixes problems earlier than the bundler.
 
->**JOHN:**
+>**John**:
 I think that the bundling approach will result in a better design because
 it actually focuses on design, rather than focusing on tests and hoping
 that a good design will magically emerge. I think it's really hard to argue
@@ -2149,7 +2149,7 @@ argue that the best-case outcomes for the two approaches will
 be about the same, but average and (especially) worst-case outcomes will
 be far worse for TDD.
 
-**JOHN:**
+#### John
 
 I don't think we're going to resolve our disagreements on TDD.
 To do that, we'd need empirical data about the frequency of good and bad
@@ -2173,13 +2173,13 @@ just making the next test work.
 If you do all of these things diligently, I think it is possible to
 mitigate the risks of TDD and produce well-designed code.
 
-**UB:**
+#### UB
 
 Let's just say that I agree with all that advice, but disagree with your assertion that TDD might be the cause of bad code.
 
 ### TDD Summary
 
-**JOHN:**
+#### John
 
 Here is my attempt to summarize our thoughts on Test-Driven Development:
 
@@ -2204,7 +2204,7 @@ and believe that, if anything, TDD may produce marginally better outcomes
 than bundling. You also think that preference and personality are larger factors in
 making the choice between the two.
 
-**UB:**
+#### UB
 
 This is a fair summary of our discussion.  We seem to disagree over the best application
 of discipline.  I prefer a disciplined approach to keep the code covered by tests
@@ -2214,7 +2214,7 @@ these two disciplines.
 
 ## Closing Remarks
 
-**JOHN:**
+#### John
 
 First, I'd like to thank you for tolerating (and responding to) the arguments
 I have made about some of the key ideas in *Clean Code*. I hope this
@@ -2269,7 +2269,7 @@ recognize any possible weakness and encouraging readers to take this to
 a tactical extreme where design is completely squeezed out of the development
 process.
 
-**UB:**
+#### UB
 
 John, I'd like to thank you for participating in this project.  This was a lot of fun for me.  I love disagreement and debate with smart people.  I also think that we share far more values than separate us.
 
