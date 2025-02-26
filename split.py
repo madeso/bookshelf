@@ -53,7 +53,7 @@ def cleanup_name(name: str) -> str:
 
     return replaced
 
-def markdown_split(arg: str, remove_src: bool, dry_run: bool, attach_name: bool):
+def markdown_split(arg: str, remove_src: bool, dry_run: bool, attach_name: bool, use_subfolders: bool):
     FRONTMATTER_SEP = '+++'
 
     # get directory of the file
@@ -114,7 +114,7 @@ def markdown_split(arg: str, remove_src: bool, dry_run: bool, attach_name: bool)
         base_folder = folder_name
         if attach_name:
             folder_name += "-" + cleanup_name(name)
-        path = os.path.join(dir, base, folder_name, "index.md")
+        path = os.path.join(dir, base, folder_name, "index.md") if use_subfolders else os.path.join(dir, base, folder_name + ".md")
         fm = [
             FRONTMATTER_SEP,
             f"title = \"{name}\"",
@@ -182,10 +182,12 @@ def main():
     parser.add_argument("--keep-src", help="Keep the original source file", action="store_true")
     parser.add_argument("--dry-run", help="Do not write any files", action="store_true")
     parser.add_argument("--dont-attach-name", help="Attach the section name to the folder", action="store_true")
+    parser.add_argument("--dont-move", help="Don't move the markdown files to a subfolder", action="store_true")
     args = parser.parse_args()
     remove_src = not args.keep_src
     dry_run = args.dry_run
     attach_name = not args.dont_attach_name
+    use_subfolders = not args.dont_move
 
     # collect all paths first before we start creating and potentially glob more files
     mds = []
@@ -200,7 +202,7 @@ def main():
             print(f"File or directory not found: {filename}")
 
     for filename in mds:
-        markdown_split(filename, remove_src, dry_run, attach_name)
+        markdown_split(filename, remove_src, dry_run, attach_name, use_subfolders)
 
 if __name__ == "__main__":
     main()
